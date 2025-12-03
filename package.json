@@ -9,7 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "lucide-react": "^0.555.0",
     "next": "16.0.6",
+    "postgres": "^3.4.7",
+    "prisma": "^7.1.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },

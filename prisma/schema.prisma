@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  password      String
+  categories    Category[]
+  transactions  Transaction[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Category {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  icon          String         // Lucide React icon name
+  transactions  Transaction[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([userId, name])
+}
+
+model Transaction {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  amount        Decimal        @db.Decimal(10, 2)
+  type          String         // 'income' or 'expense'
+  description   String?
+  date          DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
