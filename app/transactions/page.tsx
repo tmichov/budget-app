@@ -35,6 +35,8 @@ export default function TransactionsPage() {
   const [error, setError] = useState('');
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState(0);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -85,22 +87,34 @@ export default function TransactionsPage() {
     const touchEnd = e.changedTouches[0].clientX;
     const distance = touchStart - touchEnd;
 
-    // Swipe left more than 50px to trigger delete
+    // Swipe left more than 50px to show confirmation
     if (distance > 50) {
       setSwipedId(id);
+      setDeleteConfirmId(id);
     } else if (distance < -50) {
       setSwipedId(null);
     }
   };
 
-  const handleDeleteTransaction = async (id: string) => {
+  const handleDeleteTransaction = async () => {
+    if (!deleteConfirmId) return;
+
     try {
-      await request(`/api/transactions/${id}`, { method: 'DELETE' });
-      setTransactions(transactions.filter((t) => t.id !== id));
+      setDeleting(true);
+      await request(`/api/transactions/${deleteConfirmId}`, { method: 'DELETE' });
+      setTransactions(transactions.filter((t) => t.id !== deleteConfirmId));
       setSwipedId(null);
+      setDeleteConfirmId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete transaction');
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setSwipedId(null);
+    setDeleteConfirmId(null);
   };
 
   const getIconComponent = (iconName: string) => {
@@ -185,16 +199,10 @@ export default function TransactionsPage() {
                     onTouchStart={handleTouchStart}
                     onTouchEnd={(e) => handleTouchEnd(e, transaction.id)}
                   >
-                    {/* Delete button - visible on swipe */}
+                    {/* Delete indicator - visible on swipe */}
                     {isSwipped && (
                       <div className="absolute inset-y-0 right-0 bg-red-600 flex items-center pr-4">
-                        <button
-                          onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="text-white"
-                          title="Delete transaction"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                        <Trash2 size={20} className="text-white" />
                       </div>
                     )}
 
@@ -240,6 +248,33 @@ export default function TransactionsPage() {
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirmId && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+              <h2 className="text-lg font-bold text-foreground mb-2">Delete Transaction?</h2>
+              <p className="text-sm text-text-secondary mb-6">
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelDelete}
+                  className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteTransaction}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors font-medium text-sm"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
