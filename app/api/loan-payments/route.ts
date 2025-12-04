@@ -39,11 +39,12 @@ export async function POST(req: NextRequest) {
     const interestRateYears = JSON.parse(loan.interestRateYears);
     const paymentDateObj = new Date(paymentDate);
     const lastPaymentDate = loan.payments.length > 0 ? loan.payments[loan.payments.length - 1].date : loan.startDate;
+    const principal = parseFloat(loan.principal.toString());
 
     // Calculate interest accrued since last payment
     const balanceBeforePayment = loan.payments.length > 0
-      ? loan.payments.reduce((balance, p) => balance - p.principalPortion, loan.principal)
-      : loan.principal;
+      ? loan.payments.reduce((balance, p) => balance - parseFloat(p.principalPortion.toString()), principal)
+      : principal;
 
     const yearsElapsed = (paymentDateObj.getTime() - loan.startDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
     const interestRate = getInterestRateForPeriod(interestRateYears, yearsElapsed);

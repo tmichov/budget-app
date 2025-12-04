@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useApi } from '@/hooks/useApi';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Button } from '@/components/Button';
@@ -16,7 +16,7 @@ interface Category {
   icon: string;
 }
 
-export default function QuickAddPage() {
+function QuickAddContent() {
   const { data: session, status } = useSession();
   const { currency } = useCurrency();
   const router = useRouter();
@@ -201,5 +201,13 @@ export default function QuickAddPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function QuickAddPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><p className="text-foreground">Loading...</p></div>}>
+      <QuickAddContent />
+    </Suspense>
   );
 }

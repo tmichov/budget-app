@@ -20,7 +20,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     if (!session?.user) return 'MKD' as Currency;
     const userCurrency = (session.user as any).currency as Currency | undefined;
     return userCurrency || ('MKD' as Currency);
-  }, [session?.user?.currency]);
+  }, [session?.user]);
 
   const isLoading = status === 'loading';
 
