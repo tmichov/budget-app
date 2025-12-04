@@ -34,6 +34,7 @@ export const authOptions = {
           email: user.email,
           name: user.name,
           currency: user.currency,
+          theme: user.theme,
         };
       },
     }),
@@ -43,14 +44,16 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.currency = user.currency;
+        token.theme = user.theme;
       } else if (token.id) {
-        // Refresh currency from database on each token use
+        // Refresh currency and theme from database on each token use
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id },
-          select: { currency: true },
+          select: { currency: true, theme: true },
         });
         if (dbUser) {
           token.currency = dbUser.currency;
+          token.theme = dbUser.theme;
         }
       }
       return token;
@@ -59,6 +62,7 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.currency = token.currency as string;
+        session.user.theme = token.theme as string;
       }
       return session;
     },

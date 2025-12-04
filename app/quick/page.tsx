@@ -110,7 +110,7 @@ function QuickAddContent() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="p-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
             aria-label="Go back"
           >
             <ChevronLeft size={24} />
@@ -121,7 +121,7 @@ function QuickAddContent() {
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-4">
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-4">
             {error}
           </div>
         )}

@@ -33,25 +33,25 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="p-6 rounded-2xl bg-card border border-card-border shadow-sm">
             <TrendingUp className="text-primary mb-3" size={28} />
             <h3 className="font-semibold text-foreground mb-1">Total Balance</h3>
             <p className="text-text-secondary text-sm">Coming soon</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="p-6 rounded-2xl bg-card border border-card-border shadow-sm">
             <BarChart3 className="text-primary mb-3" size={28} />
             <h3 className="font-semibold text-foreground mb-1">Monthly Spending</h3>
             <p className="text-text-secondary text-sm">Coming soon</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="p-6 rounded-2xl bg-card border border-card-border shadow-sm">
             <Target className="text-primary mb-3" size={28} />
             <h3 className="font-semibold text-foreground mb-1">Budget Status</h3>
             <p className="text-text-secondary text-sm">Coming soon</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="p-6 rounded-2xl bg-card border border-card-border shadow-sm">
             <AlertCircle className="text-primary mb-3" size={28} />
             <h3 className="font-semibold text-foreground mb-1">Upcoming Bills</h3>
             <p className="text-text-secondary text-sm">Coming soon</p>

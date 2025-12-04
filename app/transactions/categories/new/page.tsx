@@ -82,7 +82,7 @@ export default function NewCategoryPage() {
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => router.back()}
-            className="p-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft size={24} />
@@ -123,7 +123,7 @@ export default function NewCategoryPage() {
                     className={`p-4 rounded-lg flex items-center justify-center transition-all ${
                       isSelected
                         ? "bg-primary text-white shadow-md"
-                        : "bg-gray-100 dark:bg-gray-700 text-foreground hover:bg-gray-200 dark:hover:bg-gray-600"
+                        : "bg-secondary text-foreground hover:opacity-80"
                     }`}
                     title={iconName}
                   >
@@ -135,7 +135,7 @@ export default function NewCategoryPage() {
           </div>
 
           {/* Preview */}
-          <div className="p-6 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+          <div className="p-6 rounded-2xl bg-card border border-card-border">
             <p className="text-sm font-medium text-text-secondary mb-3">
               Preview
             </p>

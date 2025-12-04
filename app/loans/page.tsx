@@ -125,7 +125,7 @@ export default function LoansPage() {
                 <button
                   key={loan.id}
                   onClick={() => router.push(`/loans/${loan.id}`)}
-                  className="w-full text-left bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:border-primary/50 transition-colors"
+                  className="w-full text-left bg-card border border-card-border rounded-lg p-4 hover:border-primary/50 transition-colors"
                 >
                   {/* Loan Header */}
                   <div className="flex items-center justify-between mb-3">
@@ -149,7 +149,7 @@ export default function LoansPage() {
 
                   {/* Loan Stats */}
                   <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+                    <div className="p-2 bg-secondary rounded">
                       <p className="text-text-secondary mb-1">Principal</p>
                       <p className="font-semibold text-foreground">
                         {loan.currency === currency ? (
@@ -159,7 +159,7 @@ export default function LoansPage() {
                         )}
                       </p>
                     </div>
-                    <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+                    <div className="p-2 bg-secondary rounded">
                       <p className="text-text-secondary mb-1">Remaining</p>
                       <p className="font-semibold text-foreground">
                         {loan.currency === currency ? (
@@ -169,7 +169,7 @@ export default function LoansPage() {
                         )}
                       </p>
                     </div>
-                    <div className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
+                    <div className="p-2 bg-secondary rounded">
                       <p className="text-text-secondary mb-1">Paid</p>
                       <p className="font-semibold text-foreground">
                         {loan.currency === currency ? (
@@ -190,7 +190,7 @@ export default function LoansPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+          <div className="bg-card rounded-lg p-6 max-w-sm w-full">
             <h2 className="text-lg font-bold text-foreground mb-2">
               Delete Loan?
             </h2>
@@ -200,7 +200,7 @@ export default function LoansPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-secondary transition-colors font-medium text-sm"
               >
                 Cancel
               </button>

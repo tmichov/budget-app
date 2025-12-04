@@ -154,7 +154,7 @@ export default function BillsPage() {
                 <button
                   key={bill.id}
                   onClick={() => router.push(`/bills/${bill.id}`)}
-                  className="w-full text-left bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:border-primary/50 transition-colors"
+                  className="w-full text-left bg-card border border-card-border rounded-lg p-4 hover:border-primary/50 transition-colors"
                 >
                   {/* Alert for missing payment */}
                   {!isPaid && (
@@ -212,7 +212,7 @@ export default function BillsPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+          <div className="bg-card rounded-lg p-6 max-w-sm w-full">
             <h2 className="text-lg font-bold text-foreground mb-2">
               Delete Bill?
             </h2>
@@ -222,7 +222,7 @@ export default function BillsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-secondary transition-colors font-medium text-sm"
               >
                 Cancel
               </button>

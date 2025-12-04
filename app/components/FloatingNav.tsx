@@ -45,7 +45,7 @@ export function FloatingNav() {
 
   return (
     <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none">
-      <div className="flex gap-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 p-2 pointer-events-auto">
+      <div className="flex gap-2 bg-card rounded-full shadow-lg border border-card-border p-2 pointer-events-auto">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const IconComponent = item.icon;
@@ -58,7 +58,7 @@ export function FloatingNav() {
                 ${
                   active
                     ? 'bg-primary text-white shadow-md px-4'
-                    : 'text-foreground hover:bg-gray-100 dark:hover:bg-gray-700'
+                    : 'text-foreground hover:bg-secondary'
                 }
               `}
             >

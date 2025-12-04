@@ -75,7 +75,7 @@ export default function CategoriesPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="p-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft size={24} />
@@ -84,7 +84,7 @@ export default function CategoriesPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-6">
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-6">
             {error}
           </div>
         )}
@@ -111,7 +111,7 @@ export default function CategoriesPage() {
               return (
                 <div
                   key={category.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
+                  className="flex items-center justify-between p-4 rounded-lg bg-card border border-card-border"
                 >
                   <div className="flex items-center gap-3">
                     <IconComponent size={20} className="text-primary" />
@@ -121,7 +121,7 @@ export default function CategoriesPage() {
                   </div>
                   <button
                     onClick={() => handleDeleteCategory(category.id)}
-                    className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                    className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                     title="Delete category"
                   >
                     <Trash2 size={18} />

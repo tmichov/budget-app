@@ -72,13 +72,13 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-border rounded-lg shadow-lg z-50 p-4">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-lg z-50 p-4">
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
               onClick={prevMonth}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="p-1 hover:bg-secondary rounded transition-colors"
             >
               <ChevronLeft size={20} className="text-foreground" />
             </button>
@@ -86,7 +86,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
             <button
               type="button"
               onClick={nextMonth}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="p-1 hover:bg-secondary rounded transition-colors"
             >
               <ChevronRight size={20} className="text-foreground" />
             </button>
@@ -130,7 +130,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
                       ? 'bg-primary text-white font-semibold'
                       : isToday
                       ? 'bg-primary/10 text-primary font-semibold'
-                      : 'text-foreground hover:bg-gray-100 dark:hover:bg-gray-700'
+                      : 'text-foreground hover:bg-secondary'
                     }
                   `}
                 >
@@ -144,7 +144,7 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="w-full mt-4 py-2 text-sm font-medium text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="w-full mt-4 py-2 text-sm font-medium text-primary hover:bg-secondary rounded transition-colors"
           >
             Done
           </button>

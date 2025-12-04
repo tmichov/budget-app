@@ -157,34 +157,33 @@ export default function TransactionsPage() {
     <div className="min-h-screen bg-background px-4 py-6 md:px-6 pb-32">
       <div className="max-w-4xl mx-auto">
         {error && (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-6">
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-6">
             {error}
           </div>
         )}
 
         {/* Summary Card - Compact */}
         <div
-          className={`p-4 rounded-lg border mb-4 ${
-            balance >= 0
-              ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20"
-              : "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20"
-          }`}
+          className="p-4 rounded-lg border mb-4"
+          style={{
+            backgroundColor:
+              balance >= 0 ? "var(--success-light)" : "var(--danger-light)",
+            borderColor: balance >= 0 ? "var(--success)" : "var(--danger)",
+          }}
         >
           <p
-            className={`text-xs font-medium mb-1 ${
-              balance >= 0
-                ? "text-green-700 dark:text-green-400"
-                : "text-red-700 dark:text-red-400"
-            }`}
+            className="text-xs font-medium mb-1"
+            style={{
+              color: balance >= 0 ? "var(--success)" : "var(--danger)",
+            }}
           >
             Balance
           </p>
           <p
-            className={`text-2xl font-bold ${
-              balance >= 0
-                ? "text-green-900 dark:text-green-300"
-                : "text-red-900 dark:text-red-300"
-            }`}
+            className="text-2xl font-bold"
+            style={{
+              color: balance >= 0 ? "var(--success)" : "var(--danger)",
+            }}
           >
             <CurrencyDisplay amount={Math.abs(balance)} currency={currency} />
           </p>
@@ -241,7 +240,7 @@ export default function TransactionsPage() {
 
                     {/* Transaction content */}
                     <div
-                      className={`flex items-center justify-between p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 transition-transform ${
+                      className={`flex items-center justify-between p-3 rounded-lg bg-card border border-card-border transition-transform ${
                         isSwipped ? "translate-x-[-60px]" : "translate-x-0"
                       }`}
                     >
@@ -281,9 +280,7 @@ export default function TransactionsPage() {
                       <div className="flex items-center gap-2">
                         <p
                           className={`font-bold text-base whitespace-nowrap ${
-                            isIncome
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-red-600 dark:text-red-400"
+                            isIncome ? "text-green-600" : "text-red-600"
                           }`}
                         >
                           <CurrencyDisplay
@@ -296,7 +293,7 @@ export default function TransactionsPage() {
                           onClick={() => {
                             setDeleteConfirmId(transaction.id);
                           }}
-                          className="hidden md:block p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                          className="hidden md:block p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                           title="Delete transaction"
                         >
                           <Trash2 size={18} />
@@ -313,7 +310,7 @@ export default function TransactionsPage() {
         {/* Delete Confirmation Modal */}
         {deleteConfirmId && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+            <div className="bg-card rounded-lg p-6 max-w-sm w-full">
               <h2 className="text-lg font-bold text-foreground mb-2">
                 Delete Transaction?
               </h2>
@@ -323,7 +320,7 @@ export default function TransactionsPage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleCancelDelete}
-                  className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+                  className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-secondary transition-colors font-medium text-sm"
                 >
                   Cancel
                 </button>

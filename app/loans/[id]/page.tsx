@@ -179,7 +179,7 @@ export default function LoanDetailsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
-              className="p-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
               aria-label="Go back"
             >
               <ArrowLeft size={24} />
@@ -196,18 +196,18 @@ export default function LoanDetailsPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-6">
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-6">
             {error}
           </div>
         )}
 
         {/* Progress Bar */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 mb-6">
+        <div className="bg-card rounded-lg p-4 border border-card-border mb-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-foreground">Progress</p>
             <p className="text-sm font-medium text-foreground">{progressPercent.toFixed(1)}%</p>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-secondary rounded-full h-2">
             <div
               className="bg-primary h-2 rounded-full transition-all"
               style={{ width: `${Math.min(100, progressPercent)}%` }}
@@ -217,7 +217,7 @@ export default function LoanDetailsPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+          <div className="bg-card rounded-lg p-3 border border-card-border">
             <p className="text-xs text-text-secondary mb-1">Principal</p>
             <p className="font-bold text-foreground text-sm">
               {loan.currency === currency ? (
@@ -227,7 +227,7 @@ export default function LoanDetailsPage() {
               )}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+          <div className="bg-card rounded-lg p-3 border border-card-border">
             <p className="text-xs text-text-secondary mb-1">Paid</p>
             <p className="font-bold text-foreground text-sm">
               {loan.currency === currency ? (
@@ -237,7 +237,7 @@ export default function LoanDetailsPage() {
               )}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+          <div className="bg-card rounded-lg p-3 border border-card-border">
             <p className="text-xs text-text-secondary mb-1">Remaining</p>
             <p className="font-bold text-foreground text-sm">
               {loan.currency === currency ? (
@@ -247,7 +247,7 @@ export default function LoanDetailsPage() {
               )}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-100 dark:border-gray-700">
+          <div className="bg-card rounded-lg p-3 border border-card-border">
             <p className="text-xs text-text-secondary mb-1">Total Interest</p>
             <p className="font-bold text-foreground text-sm">
               {loan.currency === currency ? (
@@ -261,7 +261,7 @@ export default function LoanDetailsPage() {
 
         {/* Chart */}
         {chartData.length > 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-100 dark:border-gray-700 mb-6">
+          <div className="bg-card rounded-lg p-4 border border-card-border mb-6">
             <p className="text-sm font-medium text-foreground mb-4">
               Balance Over Time
             </p>
@@ -426,7 +426,7 @@ export default function LoanDetailsPage() {
                 .map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-card border border-card-border rounded-lg"
                   >
                     <div className="flex-1">
                       <p className="font-medium text-foreground">
@@ -464,7 +464,7 @@ export default function LoanDetailsPage() {
                     </div>
                     <button
                       onClick={() => setDeletePaymentId(payment.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                       title="Delete payment"
                     >
                       <Trash2 size={18} />
@@ -479,7 +479,7 @@ export default function LoanDetailsPage() {
       {/* Delete Payment Modal */}
       {deletePaymentId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+          <div className="bg-card rounded-lg p-6 max-w-sm w-full">
             <h2 className="text-lg font-bold text-foreground mb-2">
               Delete Payment?
             </h2>
@@ -489,7 +489,7 @@ export default function LoanDetailsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeletePaymentId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-secondary transition-colors font-medium text-sm"
               >
                 Cancel
               </button>
@@ -508,7 +508,7 @@ export default function LoanDetailsPage() {
       {/* Delete Loan Modal */}
       {deleteLoanConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
+          <div className="bg-card rounded-lg p-6 max-w-sm w-full">
             <h2 className="text-lg font-bold text-foreground mb-2">
               Delete Loan?
             </h2>
@@ -518,7 +518,7 @@ export default function LoanDetailsPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteLoanConfirm(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-sm"
+                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-secondary transition-colors font-medium text-sm"
               >
                 Cancel
               </button>

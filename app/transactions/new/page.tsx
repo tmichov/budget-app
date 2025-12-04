@@ -102,7 +102,7 @@ export default function NewTransactionPage() {
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => router.back()}
-            className="p-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft size={24} />
@@ -113,7 +113,7 @@ export default function NewTransactionPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-6">
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-6">
             {error}
           </div>
         )}
@@ -136,7 +136,7 @@ export default function NewTransactionPage() {
                 className={`flex-1 py-3 rounded-lg font-medium transition-all ${
                   newTransaction.type === "expense"
                     ? "bg-red-600 text-white shadow-md"
-                    : "bg-gray-100 dark:bg-gray-700 text-foreground hover:bg-gray-200 dark:hover:bg-gray-600"
+                    : "bg-secondary text-foreground hover:opacity-80"
                 }`}
               >
                 Expense
@@ -152,7 +152,7 @@ export default function NewTransactionPage() {
                 className={`flex-1 py-3 rounded-lg font-medium transition-all ${
                   newTransaction.type === "income"
                     ? "bg-green-600 text-white shadow-md"
-                    : "bg-gray-100 dark:bg-gray-700 text-foreground hover:bg-gray-200 dark:hover:bg-gray-600"
+                    : "bg-secondary text-foreground hover:opacity-80"
                 }`}
               >
                 Income

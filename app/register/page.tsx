@@ -99,7 +99,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen w-full bg-background flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
@@ -111,7 +111,7 @@ export default function RegisterPage() {
           <p className="text-text-secondary text-sm">Take control of your finances</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
+        <div className="bg-card rounded-2xl shadow-sm border border-card-border p-8">
           <h2 className="text-2xl font-bold text-foreground mb-2">
             Get Started
           </h2>

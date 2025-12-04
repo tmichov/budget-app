@@ -84,7 +84,7 @@ export default function NewBillPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="p-2 text-foreground hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft size={24} />
@@ -93,7 +93,7 @@ export default function NewBillPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-6">
+          <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-6">
             {error}
           </div>
         )}
@@ -114,7 +114,7 @@ export default function NewBillPage() {
             <label className="block text-sm font-medium mb-3 text-foreground">Icon</label>
 
             {/* Preview */}
-            <div className="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
+            <div className="flex items-center justify-center p-4 bg-secondary rounded-lg mb-4">
               <div className="p-4 rounded-lg bg-primary/10">
                 <SelectedIcon size={32} className="text-primary" />
               </div>
@@ -134,7 +134,7 @@ export default function NewBillPage() {
                     className={`p-3 rounded-lg transition-all ${
                       isSelected
                         ? 'bg-primary text-white border-2 border-primary'
-                        : 'bg-gray-100 dark:bg-gray-700 text-foreground hover:bg-gray-200 dark:hover:bg-gray-600 border-2 border-transparent'
+                        : 'bg-secondary text-foreground hover:opacity-80 border-2 border-transparent'
                     }`}
                     title={iconName}
                   >

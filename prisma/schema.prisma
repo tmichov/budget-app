@@ -13,6 +13,7 @@ model User {
   name          String
   password      String
   currency      String         @default("MKD") // 'MKD', 'USD', or 'EUR'
+  theme         String         @default("dark") // 'dark' or 'light'
   categories    Category[]
   transactions  Transaction[]
   bills         Bill[]

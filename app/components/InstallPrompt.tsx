@@ -8,15 +8,24 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const INSTALL_PROMPT_DISMISSED_KEY = 'pwa_install_prompt_dismissed';
+
 export function InstallPrompt() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
+    // Check if user has already dismissed the prompt
+    const isDismissed = localStorage.getItem(INSTALL_PROMPT_DISMISSED_KEY);
+
     const handler = (e: Event) => {
       e.preventDefault();
-      setInstallPrompt(e as BeforeInstallPromptEvent);
-      setShowPrompt(true);
+
+      // Only show if not previously dismissed
+      if (!isDismissed) {
+        setInstallPrompt(e as BeforeInstallPromptEvent);
+        setShowPrompt(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handler);
@@ -36,6 +45,7 @@ export function InstallPrompt() {
       if (outcome === 'accepted') {
         setShowPrompt(false);
         setInstallPrompt(null);
+        localStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, 'true');
       }
     } catch (err) {
       console.error('Install prompt error:', err);
@@ -44,6 +54,8 @@ export function InstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
+    // Mark as dismissed so we never show it again
+    localStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, 'true');
   };
 
   if (!showPrompt || !installPrompt) {
@@ -51,7 +63,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 p-4 z-40 max-w-sm mx-auto">
+    <div className="fixed bottom-20 left-4 right-4 bg-card rounded-lg shadow-lg border border-card-border p-4 z-40 max-w-sm mx-auto">
       <div className="flex items-start gap-3">
         <Download size={20} className="text-primary flex-shrink-0 mt-1" />
         <div className="flex-1">
@@ -68,7 +80,7 @@ export function InstallPrompt() {
             </button>
             <button
               onClick={handleDismiss}
-              className="flex-1 bg-gray-100 dark:bg-gray-700 text-foreground py-2 px-3 rounded font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex-1 bg-secondary text-foreground py-2 px-3 rounded font-medium text-sm hover:opacity-80 transition-colors"
             >
               Later
             </button>
