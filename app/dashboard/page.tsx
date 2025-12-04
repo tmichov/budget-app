@@ -1,21 +1,22 @@
 'use client';
 
-import { useAuth } from '../context/AuthContext';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { TrendingUp, BarChart3, Target, AlertCircle } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
+    if (status === 'loading') return;
+    if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [status, router]);
 
-  if (!user) {
+  if (!session?.user) {
     return null;
   }
 
@@ -24,7 +25,7 @@ export default function DashboardPage() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Welcome, {user.name.split(' ')[0]}!
+            Welcome, {session?.user?.name?.split(' ')[0]}!
           </h1>
           <p className="text-text-secondary">
             Here's an overview of your finances

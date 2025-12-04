@@ -1,0 +1,93 @@
+{
+  "name": "Budget App",
+  "short_name": "Budget",
+  "description": "Track your transactions, bills, and loans with ease",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#2d7a4f",
+  "background_color": "#fafafa",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Expense",
+      "short_name": "Add Expense",
+      "description": "Quickly add a new expense",
+      "url": "/quick?type=expense",
+      "icons": [
+        {
+          "src": "/icon-shortcut-expense-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Add Income",
+      "short_name": "Add Income",
+      "description": "Quickly add income",
+      "url": "/quick?type=income",
+      "icons": [
+        {
+          "src": "/icon-shortcut-income-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "View Transactions",
+      "short_name": "Transactions",
+      "description": "View all transactions",
+      "url": "/transactions"
+    },
+    {
+      "name": "View Bills",
+      "short_name": "Bills",
+      "description": "View all bills",
+      "url": "/bills"
+    }
+  ],
+  "categories": ["finance", "productivity"]
+}

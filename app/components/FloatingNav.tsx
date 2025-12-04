@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import { useSession, signOut } from 'next-auth/react';
 import { Wallet, FileText, Banknote, User } from 'lucide-react';
 
 export function FloatingNav() {
   const pathname = usePathname();
-  const { logout, user } = useAuth();
+  const { data: session } = useSession();
 
   // Don't show nav on auth pages
-  if (pathname === '/login' || pathname === '/register' || !user) {
+  if (pathname === '/login' || pathname === '/register' || !session?.user) {
     return null;
   }
 

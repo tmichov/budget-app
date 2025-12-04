@@ -1,28 +1,43 @@
 'use client';
 
-import { useAuth } from '../context/AuthContext';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/Button';
 import { User as UserIcon } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
+import type { Currency } from '@/lib/currency';
+import { CURRENCIES } from '@/lib/currency';
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { data: session, status } = useSession();
+  const { currency, setCurrency } = useCurrency();
   const router = useRouter();
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currency);
 
   useEffect(() => {
-    if (!user) {
+    if (status === 'loading') return;
+    if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [status, router]);
 
-  if (!user) {
+  useEffect(() => {
+    setSelectedCurrency(currency);
+  }, [currency]);
+
+  if (!session?.user) {
     return null;
   }
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
     router.push('/login');
+  };
+
+  const handleCurrencyChange = async (newCurrency: Currency) => {
+    setSelectedCurrency(newCurrency);
+    await setCurrency(newCurrency);
   };
 
   return (
@@ -39,26 +54,52 @@ export default function ProfilePage() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-foreground">
-                {user.name}
+                {session?.user?.name}
               </h2>
-              <p className="text-text-secondary">{user.email}</p>
+              <p className="text-text-secondary">{session?.user?.email}</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="py-4 border-t border-border">
               <p className="text-sm text-text-secondary mb-1">Email Address</p>
-              <p className="text-foreground font-medium">{user.email}</p>
+              <p className="text-foreground font-medium">{session?.user?.email}</p>
             </div>
 
             <div className="py-4 border-t border-border">
               <p className="text-sm text-text-secondary mb-1">Full Name</p>
-              <p className="text-foreground font-medium">{user.name}</p>
+              <p className="text-foreground font-medium">{session?.user?.name}</p>
             </div>
 
             <div className="py-4 border-t border-border">
               <p className="text-sm text-text-secondary mb-1">User ID</p>
-              <p className="text-foreground font-medium">{user.id}</p>
+              <p className="text-foreground font-medium">{session?.user?.id}</p>
+            </div>
+
+            <div className="py-4 border-t border-border">
+              <p className="text-sm text-text-secondary mb-3">Currency</p>
+              <div className="grid grid-cols-3 gap-3">
+                {(Object.entries(CURRENCIES) as Array<[Currency, any]>).map(
+                  ([currencyCode, currencyInfo]) => (
+                    <button
+                      key={currencyCode}
+                      onClick={() => handleCurrencyChange(currencyCode)}
+                      className={`p-3 rounded-lg border-2 transition-colors text-center ${
+                        selectedCurrency === currencyCode
+                          ? 'border-primary bg-primary/10 text-primary font-semibold'
+                          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 text-foreground hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="text-lg font-bold mb-1">
+                        {currencyInfo.symbol}
+                      </div>
+                      <div className="text-xs text-text-secondary">
+                        {currencyCode}
+                      </div>
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </div>
         </div>

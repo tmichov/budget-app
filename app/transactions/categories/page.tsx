@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useApi } from '@/hooks/useApi';
-import { Button } from '@/components/Button';
-import { Plus, Trash2, ArrowLeft } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useApi } from "@/hooks/useApi";
+import { Button } from "@/components/Button";
+import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 
 interface Category {
   id: string;
@@ -15,43 +15,48 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const { user } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const { request } = useApi();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.push("/login");
       return;
     }
     fetchCategories();
-  }, [user, router]);
+  }, [status, router]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await request('/api/categories');
+      const data = await request("/api/categories");
       setCategories(data);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load categories');
+      setError(
+        err instanceof Error ? err.message : "Failed to load categories",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Delete this category?')) return;
+    if (!confirm("Delete this category?")) return;
 
     try {
-      await request(`/api/categories/${id}`, { method: 'DELETE' });
+      await request(`/api/categories/${id}`, { method: "DELETE" });
       setCategories(categories.filter((c) => c.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete category');
+      setError(
+        err instanceof Error ? err.message : "Failed to delete category",
+      );
     }
   };
 
@@ -60,7 +65,7 @@ export default function CategoriesPage() {
     return Icon;
   };
 
-  if (!user) return null;
+  if (!session?.user) return null;
   if (loading) return <div className="p-4 text-center">Loading...</div>;
 
   return (
@@ -86,7 +91,7 @@ export default function CategoriesPage() {
 
         {/* Add Category Button */}
         <Button
-          onClick={() => router.push('/transactions/categories/new')}
+          onClick={() => router.push("/transactions/categories/new")}
           className="w-full mb-4"
           size="sm"
         >
@@ -96,7 +101,9 @@ export default function CategoriesPage() {
 
         {/* Categories List */}
         {categories.length === 0 ? (
-          <p className="text-text-secondary text-center py-8">No categories yet</p>
+          <p className="text-text-secondary text-center py-8">
+            No categories yet
+          </p>
         ) : (
           <div className="space-y-2">
             {categories.map((category) => {
@@ -108,7 +115,9 @@ export default function CategoriesPage() {
                 >
                   <div className="flex items-center gap-3">
                     <IconComponent size={20} className="text-primary" />
-                    <span className="font-medium text-foreground">{category.name}</span>
+                    <span className="font-medium text-foreground">
+                      {category.name}
+                    </span>
                   </div>
                   <button
                     onClick={() => handleDeleteCategory(category.id)}

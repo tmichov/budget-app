@@ -1,20 +1,22 @@
-import { useAuth } from '@/context/AuthContext';
+'use client';
+
+import { useSession } from 'next-auth/react';
 import { useCallback } from 'react';
 
 export function useApi() {
-  const { user } = useAuth();
+  const { data: session } = useSession();
 
   const request = useCallback(
     async (
       endpoint: string,
       options: RequestInit = {}
     ) => {
-      if (!user) {
+      if (!session?.user?.id) {
         throw new Error('User not authenticated');
       }
 
       const headers = new Headers(options.headers || {});
-      headers.set('x-user-id', user.id);
+      headers.set('x-user-id', session.user.id);
 
       const response = await fetch(endpoint, {
         ...options,
@@ -28,7 +30,7 @@ export function useApi() {
 
       return response.json();
     },
-    [user]
+    [session?.user?.id]
   );
 
   return { request };

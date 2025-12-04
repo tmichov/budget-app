@@ -12,8 +12,13 @@ model User {
   email         String         @unique
   name          String
   password      String
+  currency      String         @default("MKD") // 'MKD', 'USD', or 'EUR'
   categories    Category[]
   transactions  Transaction[]
+  bills         Bill[]
+  billPayments  BillPayment[]
+  loans         Loan[]
+  loanPayments  LoanPayment[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -43,5 +48,62 @@ model Transaction {
   date          DateTime       @default(now())
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+}
+
+model Bill {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String         // e.g., "Electricity", "Water"
+  icon          String         // Lucide React icon name
+  payments      BillPayment[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([userId, name])
+}
+
+model BillPayment {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billId        String
+  bill          Bill           @relation(fields: [billId], references: [id], onDelete: Cascade)
+  amount        Decimal        @db.Decimal(10, 2)
+  date          DateTime       // Month/year of the bill payment
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([billId, date])
+}
+
+model Loan {
+  id                    String         @id @default(cuid())
+  userId                String
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String         // e.g., "Apartment Loan"
+  principal             Decimal        @db.Decimal(12, 2) // Original loan amount
+  currency              String         // 'MKD', 'USD', or 'EUR'
+  totalMonths           Int            // Total loan term in months
+  interestRateYears     String         // JSON string: [{"years": 10, "rate": 3.49}, {"years": 20, "rate": 9.93}]
+  startDate             DateTime       // Loan origination date
+  payments              LoanPayment[]
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+}
+
+model LoanPayment {
+  id                    String         @id @default(cuid())
+  userId                String
+  user                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loanId                String
+  loan                  Loan           @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  amount                Decimal        @db.Decimal(12, 2) // Payment amount
+  interestPortion       Decimal        @db.Decimal(12, 2) // How much of payment is interest
+  principalPortion      Decimal        @db.Decimal(12, 2) // How much of payment is principal
+  date                  DateTime       // Date of payment
+  transactionId         String?        // Link to Transaction
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 }
 

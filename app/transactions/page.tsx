@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useApi } from '@/hooks/useApi';
-import { Button } from '@/components/Button';
-import { Plus, Trash2 } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useApi } from "@/hooks/useApi";
+import { useCurrency } from "@/context/CurrencyContext";
+import { formatCurrency } from "@/lib/currency";
+import { Button } from "@/components/Button";
+import { CurrencyDisplay } from "@/components/CurrencyDisplay";
+import { Plus, Trash2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { format } from "date-fns";
 
 interface Category {
   id: string;
@@ -17,7 +21,7 @@ interface Category {
 interface Transaction {
   id: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   description?: string;
   date: string;
   categoryId: string | null;
@@ -25,33 +29,35 @@ interface Transaction {
 }
 
 export default function TransactionsPage() {
-  const { user } = useAuth();
+  const { data: session, status } = useSession();
+  const { currency } = useCurrency();
   const router = useRouter();
   const { request } = useApi();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [touchStart, setTouchStart] = useState(0);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.push("/login");
       return;
     }
     fetchData();
-  }, [user, router]);
+  }, [status, router]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const [categoriesData, transactionsData] = await Promise.all([
-        request('/api/categories'),
-        request('/api/transactions'),
+        request("/api/categories"),
+        request("/api/transactions"),
       ]);
       setCategories(categoriesData);
       // Parse amounts to numbers since Prisma Decimal comes as string in JSON
@@ -60,22 +66,24 @@ export default function TransactionsPage() {
         amount: parseFloat(t.amount),
       }));
       setTransactions(parsedTransactions);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Delete this category?')) return;
+    if (!confirm("Delete this category?")) return;
 
     try {
-      await request(`/api/categories/${id}`, { method: 'DELETE' });
+      await request(`/api/categories/${id}`, { method: "DELETE" });
       setCategories(categories.filter((c) => c.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete category');
+      setError(
+        err instanceof Error ? err.message : "Failed to delete category",
+      );
     }
   };
 
@@ -101,12 +109,16 @@ export default function TransactionsPage() {
 
     try {
       setDeleting(true);
-      await request(`/api/transactions/${deleteConfirmId}`, { method: 'DELETE' });
+      await request(`/api/transactions/${deleteConfirmId}`, {
+        method: "DELETE",
+      });
       setTransactions(transactions.filter((t) => t.id !== deleteConfirmId));
       setSwipedId(null);
       setDeleteConfirmId(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete transaction');
+      setError(
+        err instanceof Error ? err.message : "Failed to delete transaction",
+      );
     } finally {
       setDeleting(false);
     }
@@ -122,15 +134,23 @@ export default function TransactionsPage() {
     return Icon;
   };
 
-  if (!user) return null;
+  if (!session?.user) return null;
   if (loading) return <div className="p-4 text-center">Loading...</div>;
 
   const totalIncome = transactions
-    .filter((t) => t.type === 'income')
-    .reduce((sum, t) => sum + (typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount), 0);
+    .filter((t) => t.type === "income")
+    .reduce(
+      (sum, t) =>
+        sum + (typeof t.amount === "string" ? parseFloat(t.amount) : t.amount),
+      0,
+    );
   const totalExpense = transactions
-    .filter((t) => t.type === 'expense')
-    .reduce((sum, t) => sum + (typeof t.amount === 'string' ? parseFloat(t.amount) : t.amount), 0);
+    .filter((t) => t.type === "expense")
+    .reduce(
+      (sum, t) =>
+        sum + (typeof t.amount === "string" ? parseFloat(t.amount) : t.amount),
+      0,
+    );
   const balance = totalIncome - totalExpense;
 
   return (
@@ -143,27 +163,37 @@ export default function TransactionsPage() {
         )}
 
         {/* Summary Card - Compact */}
-        <div className={`p-4 rounded-lg border mb-4 ${
-          balance >= 0
-            ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20'
-            : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20'
-        }`}>
-          <p className={`text-xs font-medium mb-1 ${
+        <div
+          className={`p-4 rounded-lg border mb-4 ${
             balance >= 0
-              ? 'text-green-700 dark:text-green-400'
-              : 'text-red-700 dark:text-red-400'
-          }`}>Balance</p>
-          <p className={`text-2xl font-bold ${
-            balance >= 0
-              ? 'text-green-900 dark:text-green-300'
-              : 'text-red-900 dark:text-red-300'
-          }`}>₹{Math.abs(balance).toFixed(2)}</p>
+              ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/20"
+              : "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20"
+          }`}
+        >
+          <p
+            className={`text-xs font-medium mb-1 ${
+              balance >= 0
+                ? "text-green-700 dark:text-green-400"
+                : "text-red-700 dark:text-red-400"
+            }`}
+          >
+            Balance
+          </p>
+          <p
+            className={`text-2xl font-bold ${
+              balance >= 0
+                ? "text-green-900 dark:text-green-300"
+                : "text-red-900 dark:text-red-300"
+            }`}
+          >
+            <CurrencyDisplay amount={Math.abs(balance)} currency={currency} />
+          </p>
         </div>
 
         {/* Action Buttons */}
         <div className="flex gap-2 mb-4">
           <Button
-            onClick={() => router.push('/transactions/new')}
+            onClick={() => router.push("/transactions/new")}
             size="sm"
             className="flex-1"
           >
@@ -171,7 +201,7 @@ export default function TransactionsPage() {
             Add Transaction
           </Button>
           <Button
-            onClick={() => router.push('/transactions/categories')}
+            onClick={() => router.push("/transactions/categories")}
             variant="outline"
             size="sm"
             className="flex-1"
@@ -182,14 +212,17 @@ export default function TransactionsPage() {
 
         {/* Transactions Section */}
         <div>
-
           {transactions.length === 0 ? (
-            <p className="text-text-secondary text-center py-8">No transactions yet</p>
+            <p className="text-text-secondary text-center py-8">
+              No transactions yet
+            </p>
           ) : (
             <div className="space-y-2">
               {transactions.map((transaction) => {
-                const IconComponent = transaction.category ? getIconComponent(transaction.category.icon) : null;
-                const isIncome = transaction.type === 'income';
+                const IconComponent = transaction.category
+                  ? getIconComponent(transaction.category.icon)
+                  : null;
+                const isIncome = transaction.type === "income";
                 const isSwipped = swipedId === transaction.id;
 
                 return (
@@ -209,7 +242,7 @@ export default function TransactionsPage() {
                     {/* Transaction content */}
                     <div
                       className={`flex items-center justify-between p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 transition-transform ${
-                        isSwipped ? 'translate-x-[-60px]' : 'translate-x-0'
+                        isSwipped ? "translate-x-[-60px]" : "translate-x-0"
                       }`}
                     >
                       <div className="flex items-center gap-3 flex-1">
@@ -217,30 +250,58 @@ export default function TransactionsPage() {
                           {IconComponent ? (
                             <IconComponent size={18} className="text-primary" />
                           ) : (
-                            <LucideIcons.DollarSign size={18} className="text-primary" />
+                            <LucideIcons.DollarSign
+                              size={18}
+                              className="text-primary"
+                            />
                           )}
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-foreground">
-                            {transaction.category ? transaction.category.name : 'Income'}
+                            {transaction.type === "income"
+                              ? "Income"
+                              : transaction.category
+                                ? transaction.category.name
+                                : transaction.description}
                           </p>
                           {transaction.description && (
-                            <p className="text-xs text-text-secondary">{transaction.description}</p>
+                            <p className="text-xs text-text-secondary">
+                              {transaction.description.startsWith(
+                                "Bill payment:",
+                              )
+                                ? ""
+                                : transaction.description}
+                            </p>
                           )}
                           <p className="text-xs text-text-secondary">
-                            {new Date(transaction.date).toLocaleDateString()}
+                            {format(new Date(transaction.date), "dd/MMM/yyyy")}
                           </p>
                         </div>
                       </div>
-                      <p
-                        className={`font-bold text-base whitespace-nowrap ml-2 ${
-                          isIncome
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}
-                      >
-                        {isIncome ? '+' : '-'}₹{parseFloat(String(transaction.amount)).toFixed(2)}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={`font-bold text-base whitespace-nowrap ${
+                            isIncome
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}
+                        >
+                          <CurrencyDisplay
+                            amount={parseFloat(String(transaction.amount))}
+                            currency={currency}
+                          />
+                        </p>
+                        {/* Delete button - desktop only */}
+                        <button
+                          onClick={() => {
+                            setDeleteConfirmId(transaction.id);
+                          }}
+                          className="hidden md:block p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors"
+                          title="Delete transaction"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -253,7 +314,9 @@ export default function TransactionsPage() {
         {deleteConfirmId && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
-              <h2 className="text-lg font-bold text-foreground mb-2">Delete Transaction?</h2>
+              <h2 className="text-lg font-bold text-foreground mb-2">
+                Delete Transaction?
+              </h2>
               <p className="text-sm text-text-secondary mb-6">
                 This action cannot be undone.
               </p>
@@ -269,7 +332,7 @@ export default function TransactionsPage() {
                   disabled={deleting}
                   className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors font-medium text-sm"
                 >
-                  {deleting ? 'Deleting...' : 'Delete'}
+                  {deleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>
