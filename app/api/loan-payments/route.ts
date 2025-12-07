@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
-import { calculateInterestBetweenDates, getInterestRateForPeriod } from '@/lib/loans';
+import { calculateInterestBetweenDates, getInterestRateForMonth } from '@/lib/loans';
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,8 +46,13 @@ export async function POST(req: NextRequest) {
       ? loan.payments.reduce((balance, p) => balance - parseFloat(p.principalPortion.toString()), principal)
       : principal;
 
-    const yearsElapsed = (paymentDateObj.getTime() - loan.startDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    const interestRate = getInterestRateForPeriod(interestRateYears, yearsElapsed);
+    // Calculate months elapsed for interest rate lookup
+    const startDate = new Date(loan.startDate);
+    const monthsElapsed =
+      (paymentDateObj.getFullYear() - startDate.getFullYear()) * 12 +
+      (paymentDateObj.getMonth() - startDate.getMonth());
+    // monthsElapsed is 0-indexed
+    const interestRate = getInterestRateForMonth(interestRateYears, monthsElapsed);
 
     // Calculate interest from last payment to this payment
     const interestAccrued = calculateInterestBetweenDates(

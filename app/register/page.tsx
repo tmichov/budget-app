@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { CheckCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,6 +18,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -80,19 +82,34 @@ export default function RegisterPage() {
         throw new Error(data.message || 'Registration failed');
       }
 
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        setError(result.error);
-      } else if (result?.ok) {
-        router.push('/transactions');
-      }
+      // Show success message
+      setRegisteredEmail(formData.email);
+      setRegistrationSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: registeredEmail }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to resend email');
+      }
+
+      setError('');
+      alert('Verification email has been resent. Please check your inbox.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to resend email');
     } finally {
       setIsLoading(false);
     }
@@ -112,98 +129,161 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-card rounded-2xl shadow-sm border border-card-border p-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Get Started
-          </h2>
-          <p className="text-text-secondary text-sm mb-8">
-            Create your account and start managing your budget
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm">
-                {error}
+          {registrationSuccess ? (
+            <>
+              <div className="text-center mb-6">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle size={48} className="text-success" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Check Your Email
+                </h2>
+                <p className="text-text-secondary text-sm">
+                  We've sent a verification link to <span className="font-semibold text-foreground">{registeredEmail}</span>
+                </p>
               </div>
-            )}
 
-            <Input
-              type="text"
-              name="name"
-              label="Full Name"
-              placeholder="John Doe"
-              value={formData.name}
-              onChange={handleChange}
-              error={fieldErrors.name}
-              disabled={isLoading}
-              autoComplete="name"
-            />
+              <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-lg p-4 mb-6">
+                <p className="text-blue-900 dark:text-blue-300 text-sm">
+                  Click the link in the email to verify your account and get started with your budget management.
+                </p>
+              </div>
 
-            <Input
-              type="email"
-              name="email"
-              label="Email Address"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              error={fieldErrors.email}
-              disabled={isLoading}
-              autoComplete="email"
-            />
+              {error && (
+                <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm mb-4">
+                  {error}
+                </div>
+              )}
 
-            <Input
-              type="password"
-              name="password"
-              label="Password"
-              placeholder="Create a password"
-              value={formData.password}
-              onChange={handleChange}
-              error={fieldErrors.password}
-              disabled={isLoading}
-              autoComplete="new-password"
-            />
+              <div className="flex gap-3 mb-6">
+                <Button
+                  fullWidth
+                  variant="outline"
+                  onClick={() => {
+                    setRegistrationSuccess(false);
+                    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+                  }}
+                  disabled={isLoading}
+                >
+                  Back
+                </Button>
+                <Button
+                  fullWidth
+                  onClick={handleResendEmail}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Sending...' : 'Resend Email'}
+                </Button>
+              </div>
 
-            <Input
-              type="password"
-              name="confirmPassword"
-              label="Confirm Password"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              error={fieldErrors.confirmPassword}
-              disabled={isLoading}
-              autoComplete="new-password"
-            />
+              <div className="pt-6 border-t border-border">
+                <p className="text-center text-text-secondary text-sm">
+                  Already verified?{' '}
+                  <Link
+                    href="/login"
+                    className="text-primary font-semibold hover:text-primary-dark transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Get Started
+              </h2>
+              <p className="text-text-secondary text-sm mb-8">
+                Create your account and start managing your budget
+              </p>
 
-            <Button
-              type="submit"
-              fullWidth
-              loading={isLoading}
-              className="mt-2"
-            >
-              Create Account
-            </Button>
-          </form>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
 
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-center text-text-secondary text-sm">
-              Already have an account?{' '}
-              <Link
-                href="/login"
-                className="text-primary font-semibold hover:text-primary-dark transition-colors"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
+                <Input
+                  type="text"
+                  name="name"
+                  label="Full Name"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={handleChange}
+                  error={fieldErrors.name}
+                  disabled={isLoading}
+                  autoComplete="name"
+                />
 
-          <div className="mt-6 p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
-            <p className="text-green-900 dark:text-green-200 text-xs font-semibold mb-2">
-              ✓ Safe & Secure
-            </p>
-            <p className="text-green-800 dark:text-green-300 text-xs">
-              Your data is encrypted and protected. You can trust us with your financial information.
-            </p>
-          </div>
+                <Input
+                  type="email"
+                  name="email"
+                  label="Email Address"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={fieldErrors.email}
+                  disabled={isLoading}
+                  autoComplete="email"
+                />
+
+                <Input
+                  type="password"
+                  name="password"
+                  label="Password"
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={fieldErrors.password}
+                  disabled={isLoading}
+                  autoComplete="new-password"
+                />
+
+                <Input
+                  type="password"
+                  name="confirmPassword"
+                  label="Confirm Password"
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={fieldErrors.confirmPassword}
+                  disabled={isLoading}
+                  autoComplete="new-password"
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  loading={isLoading}
+                  className="mt-2"
+                >
+                  Create Account
+                </Button>
+              </form>
+
+              <div className="mt-6 pt-6 border-t border-border">
+                <p className="text-center text-text-secondary text-sm">
+                  Already have an account?{' '}
+                  <Link
+                    href="/login"
+                    className="text-primary font-semibold hover:text-primary-dark transition-colors"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+
+              <div className="mt-6 p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+                <p className="text-green-900 dark:text-green-200 text-xs font-semibold mb-2">
+                  ✓ Safe & Secure
+                </p>
+                <p className="text-green-800 dark:text-green-300 text-xs">
+                  Your data is encrypted and protected. You can trust us with your financial information.
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Footer Info */}

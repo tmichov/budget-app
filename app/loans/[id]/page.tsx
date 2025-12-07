@@ -38,6 +38,7 @@ interface ScheduleItem {
   payment: number;
   principal: number;
   interest: number;
+  fee: number;
   endingBalance: number;
   isPaid: boolean;
 }
@@ -50,6 +51,7 @@ interface Loan {
   totalMonths: number;
   interestRateYears: string;
   startDate: string;
+  monthlyFee: number;
   payments: LoanPayment[];
 }
 
@@ -188,7 +190,10 @@ export default function LoanDetailsPage() {
           </div>
           <button
             onClick={() => setDeleteLoanConfirm(true)}
-            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+            className="p-2 text-red-600 rounded-lg transition-colors"
+            style={{ backgroundColor: 'transparent' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--danger-light)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             title="Delete loan"
           >
             <Trash2 size={24} />
@@ -267,13 +272,13 @@ export default function LoanDetailsPage() {
             </p>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis
                   dataKey="date"
-                  stroke="#9ca3af"
+                  stroke="var(--text-secondary)"
                   style={{ fontSize: '12px' }}
                 />
-                <YAxis stroke="#9ca3af" style={{ fontSize: '12px' }} />
+                <YAxis stroke="var(--text-secondary)" style={{ fontSize: '12px' }} />
                 <Tooltip
                   formatter={(value: number) => [
                     loan.currency === currency
@@ -282,18 +287,18 @@ export default function LoanDetailsPage() {
                     'Balance',
                   ]}
                   contentStyle={{
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    border: 'none',
+                    backgroundColor: 'var(--card)',
+                    border: `1px solid var(--card-border)`,
                     borderRadius: '8px',
-                    color: '#fff',
+                    color: 'var(--foreground)',
                   }}
                 />
                 <Line
                   type="monotone"
                   dataKey="remaining"
-                  stroke="#2d7a4f"
+                  stroke="var(--primary)"
                   strokeWidth={2}
-                  dot={{ fill: '#2d7a4f', r: 4 }}
+                  dot={{ fill: 'var(--primary)', r: 4 }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>
@@ -314,7 +319,8 @@ export default function LoanDetailsPage() {
         <div className="mb-6">
           <button
             onClick={() => setShowSchedule(!showSchedule)}
-            className="w-full text-left p-4 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg hover:border-primary/50 transition-colors mb-4"
+            className="w-full text-left p-4 bg-card border border-card-border rounded-lg transition-colors mb-4"
+            style={{ borderColor: 'var(--border)' }}
           >
             <div className="flex items-center justify-between">
               <p className="font-medium text-foreground">
@@ -327,30 +333,33 @@ export default function LoanDetailsPage() {
           </button>
 
           {showSchedule && schedule.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="bg-card border border-card-border rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                    <tr className="border-b border-card-border" style={{ backgroundColor: 'var(--secondary)' }}>
                       <th className="px-3 py-2 text-left font-semibold text-foreground">Month</th>
                       <th className="px-3 py-2 text-right font-semibold text-foreground">Payment</th>
                       <th className="px-3 py-2 text-right font-semibold text-foreground">Principal</th>
                       <th className="px-3 py-2 text-right font-semibold text-foreground">Interest</th>
+                      <th className="px-3 py-2 text-right font-semibold text-foreground">Fee</th>
                       <th className="px-3 py-2 text-right font-semibold text-foreground">Balance</th>
                       <th className="px-3 py-2 text-center font-semibold text-foreground">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {schedule.map((item, index) => (
+                    {schedule.map((item, index) => {
+                      let rowStyle: React.CSSProperties = { borderColor: 'var(--card-border)' };
+                      if (item.isPaid) {
+                        rowStyle.backgroundColor = 'var(--success-light)';
+                      } else if (index === 0 || (index > 0 && schedule[index - 1].isPaid)) {
+                        rowStyle.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+                      }
+                      return (
                       <tr
                         key={index}
-                        className={`border-b border-gray-100 dark:border-gray-700 ${
-                          item.isPaid
-                            ? 'bg-green-50 dark:bg-green-500/5'
-                            : index === 0 || (index > 0 && schedule[index - 1].isPaid)
-                            ? 'bg-blue-50 dark:bg-blue-500/5'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                        }`}
+                        className="border-b"
+                        style={rowStyle}
                       >
                         <td className="px-3 py-2 font-medium text-foreground">
                           {item.month}
@@ -376,6 +385,13 @@ export default function LoanDetailsPage() {
                             `${loan.currency} ${item.interest.toFixed(2)}`
                           )}
                         </td>
+                        <td className="px-3 py-2 text-right text-foreground">
+                          {loan.currency === currency ? (
+                            <CurrencyDisplay amount={item.fee} currency={loan.currency as any} />
+                          ) : (
+                            `${loan.currency} ${item.fee.toFixed(2)}`
+                          )}
+                        </td>
                         <td className="px-3 py-2 text-right text-foreground font-medium">
                           {loan.currency === currency ? (
                             <CurrencyDisplay amount={item.endingBalance} currency={loan.currency as any} />
@@ -385,21 +401,22 @@ export default function LoanDetailsPage() {
                         </td>
                         <td className="px-3 py-2 text-center">
                           {item.isPaid ? (
-                            <span className="inline-block px-2 py-1 bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 rounded text-xs font-medium">
+                            <span className="inline-block px-2 py-1 rounded text-xs font-medium" style={{ backgroundColor: 'var(--success-light)', color: 'var(--success)' }}>
                               Paid
                             </span>
                           ) : index === 0 || (index > 0 && schedule[index - 1].isPaid) ? (
-                            <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
+                            <span className="inline-block px-2 py-1 rounded text-xs font-medium" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'rgb(59, 130, 246)' }}>
                               Next
                             </span>
                           ) : (
-                            <span className="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded text-xs font-medium">
+                            <span className="inline-block px-2 py-1 rounded text-xs font-medium" style={{ backgroundColor: 'var(--secondary)', color: 'var(--text-secondary)' }}>
                               Pending
                             </span>
                           )}
                         </td>
                       </tr>
-                    ))}
+                    );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -464,7 +481,10 @@ export default function LoanDetailsPage() {
                     </div>
                     <button
                       onClick={() => setDeletePaymentId(payment.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className="p-1 text-red-600 rounded transition-colors"
+                      style={{ backgroundColor: 'transparent' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--danger-light)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       title="Delete payment"
                     >
                       <Trash2 size={18} />

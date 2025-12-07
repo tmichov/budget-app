@@ -8,20 +8,23 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  name          String
-  password      String
-  currency      String         @default("MKD") // 'MKD', 'USD', or 'EUR'
-  theme         String         @default("dark") // 'dark' or 'light'
-  categories    Category[]
-  transactions  Transaction[]
-  bills         Bill[]
-  billPayments  BillPayment[]
-  loans         Loan[]
-  loanPayments  LoanPayment[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                              String         @id @default(cuid())
+  email                           String         @unique
+  name                            String
+  password                        String
+  currency                        String         @default("MKD") // 'MKD', 'USD', or 'EUR'
+  theme                           String         @default("dark") // 'dark' or 'light'
+  emailVerified                   DateTime?      // Null if email not verified
+  emailVerificationToken          String?        // JWT token for email verification
+  emailVerificationTokenExpires    DateTime?      // Token expiration time
+  categories                      Category[]
+  transactions                    Transaction[]
+  bills                           Bill[]
+  billPayments                    BillPayment[]
+  loans                           Loan[]
+  loanPayments                    LoanPayment[]
+  createdAt                       DateTime       @default(now())
+  updatedAt                       DateTime       @updatedAt
 }
 
 model Category {
@@ -86,8 +89,9 @@ model Loan {
   principal             Decimal        @db.Decimal(12, 2) // Original loan amount
   currency              String         // 'MKD', 'USD', or 'EUR'
   totalMonths           Int            // Total loan term in months
-  interestRateYears     String         // JSON string: [{"years": 10, "rate": 3.49}, {"years": 20, "rate": 9.93}]
+  interestRateYears     String         // JSON string: [{"months": 0, "endMonth": 119, "rate": 3.49}, ...]
   startDate             DateTime       // Loan origination date
+  monthlyFee            Decimal        @db.Decimal(8, 2) @default(0) // Fixed monthly bank fee
   payments              LoanPayment[]
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt

@@ -11,7 +11,8 @@ import { ArrowLeft, Plus, X } from 'lucide-react';
 import { CURRENCIES } from '@/lib/currency';
 
 interface InterestRate {
-  years: number;
+  startMonth: number; // 0-indexed
+  endMonth?: number; // 0-indexed, optional
   rate: number;
 }
 
@@ -24,10 +25,11 @@ export default function NewLoanPage() {
   const [principal, setPrincipal] = useState('');
   const [currency, setCurrency] = useState('EUR');
   const [totalMonths, setTotalMonths] = useState('');
+  const [monthlyFee, setMonthlyFee] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [interestRates, setInterestRates] = useState<InterestRate[]>([
-    { years: 10, rate: 3.49 },
-    { years: 20, rate: 9.93 },
+    { startMonth: 0, endMonth: 119, rate: 3.49 }, // 10 years (months 0-119)
+    { startMonth: 120, rate: 9.93 },  // 7 years (starts at month 120)
   ]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,14 +43,14 @@ export default function NewLoanPage() {
   }, [status, router]);
 
   const handleAddInterestRate = () => {
-    setInterestRates([...interestRates, { years: 0, rate: 0 }]);
+    setInterestRates([...interestRates, { startMonth: 0, rate: 0 }]);
   };
 
   const handleRemoveInterestRate = (index: number) => {
     setInterestRates(interestRates.filter((_, i) => i !== index));
   };
 
-  const handleInterestRateChange = (index: number, field: 'years' | 'rate', value: number) => {
+  const handleInterestRateChange = (index: number, field: 'startMonth' | 'endMonth' | 'rate', value: number | undefined) => {
     const updated = [...interestRates];
     updated[index] = { ...updated[index], [field]: value };
     setInterestRates(updated);
@@ -63,8 +65,8 @@ export default function NewLoanPage() {
       return;
     }
 
-    if (interestRates.some((r) => r.years <= 0 || r.rate < 0)) {
-      setError('Interest rate periods must have positive years and non-negative rates');
+    if (interestRates.some((r) => r.startMonth < 0 || r.rate < 0)) {
+      setError('Interest rate periods must have valid start months and non-negative rates');
       return;
     }
 
@@ -78,6 +80,7 @@ export default function NewLoanPage() {
           principal: parseFloat(principal),
           currency,
           totalMonths: parseInt(totalMonths),
+          monthlyFee: monthlyFee ? parseFloat(monthlyFee) : 0,
           interestRateYears: interestRates,
           startDate,
         }),
@@ -163,6 +166,16 @@ export default function NewLoanPage() {
             required
           />
 
+          {/* Monthly Fee */}
+          <Input
+            type="number"
+            label="Monthly Bank Fee (optional)"
+            placeholder="e.g., 2.80"
+            step="0.01"
+            value={monthlyFee}
+            onChange={(e) => setMonthlyFee(e.target.value)}
+          />
+
           {/* Start Date */}
           <DatePicker
             label="Loan Start Date"
@@ -191,12 +204,26 @@ export default function NewLoanPage() {
                 <div key={index} className="flex gap-2 items-end">
                   <Input
                     type="number"
-                    label={index === 0 ? 'Years' : ''}
-                    placeholder="e.g., 10"
-                    value={rate.years}
-                    onChange={(e) => handleInterestRateChange(index, 'years', parseFloat(e.target.value))}
-                    min="1"
+                    label={index === 0 ? 'Start Month' : ''}
+                    placeholder="e.g., 0"
+                    value={rate.startMonth}
+                    onChange={(e) => handleInterestRateChange(index, 'startMonth', parseFloat(e.target.value))}
+                    min="0"
                     required
+                  />
+                  <Input
+                    type="number"
+                    label={index === 0 ? 'End Month (optional)' : ''}
+                    placeholder="e.g., 119"
+                    value={rate.endMonth ?? ''}
+                    onChange={(e) =>
+                      handleInterestRateChange(
+                        index,
+                        'endMonth',
+                        e.target.value === '' ? undefined : parseFloat(e.target.value)
+                      )
+                    }
+                    min="0"
                   />
                   <Input
                     type="number"
@@ -212,7 +239,10 @@ export default function NewLoanPage() {
                     <button
                       type="button"
                       onClick={() => handleRemoveInterestRate(index)}
-                      className="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded transition-colors mb-0"
+                      className="flex-shrink-0 p-2 text-red-600 rounded transition-colors mb-0"
+                      style={{ backgroundColor: 'transparent' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--danger-light)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <X size={20} />
                     </button>
@@ -222,7 +252,7 @@ export default function NewLoanPage() {
             </div>
 
             <p className="text-xs text-text-secondary mt-2">
-              Define how the interest rate changes over time. For example: 3.49% for the first 10 years, then 9.93% for the remaining 10 years.
+              Months are 0-indexed. Example: 3.49% from month 0-119 (first 120 months = 10 years), then 9.93% from month 120 onwards (next 80 months = 6.67 years).
             </p>
           </div>
 

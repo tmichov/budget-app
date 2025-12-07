@@ -38,12 +38,16 @@ export async function GET(
       amount: parseFloat(p.amount.toString()),
     }));
 
+    const monthlyFee = parseFloat(loan.monthlyFee?.toString() || '0');
+
     const schedule = calculateAmortizationSchedule(
       parseFloat(loan.principal.toString()),
       loan.totalMonths,
       interestRateSchedule,
       new Date(loan.startDate),
-      existingPayments
+      existingPayments,
+      undefined,
+      monthlyFee
     );
 
     // Convert dates to ISO strings for JSON serialization
@@ -54,6 +58,7 @@ export async function GET(
       payment: parseFloat(item.payment.toFixed(2)),
       principal: parseFloat(item.principal.toFixed(2)),
       interest: parseFloat(item.interest.toFixed(2)),
+      fee: parseFloat(item.fee.toFixed(2)),
       endingBalance: parseFloat(item.endingBalance.toFixed(2)),
     }));
 

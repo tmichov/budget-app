@@ -8,7 +8,7 @@ import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
 import { DatePicker } from '@/components/DatePicker';
 import { ArrowLeft } from 'lucide-react';
-import { calculateInterestBetweenDates, getInterestRateForPeriod } from '@/lib/loans';
+import { calculateInterestBetweenDates, getInterestRateForMonth } from '@/lib/loans';
 
 interface LoanPayment {
   id: string;
@@ -114,10 +114,13 @@ export default function AddPaymentPage() {
           loan.payments.reduce((sum, p) => sum + p.principalPortion, 0)
         : loan.principal;
 
-      const yearsElapsed =
-        (paymentDate.getTime() - new Date(loan.startDate).getTime()) /
-        (365.25 * 24 * 60 * 60 * 1000);
-      const interestRate = getInterestRateForPeriod(interestRateYears, yearsElapsed);
+      // Calculate months elapsed for interest rate lookup
+      const startDate = new Date(loan.startDate);
+      const monthsElapsed =
+        (paymentDate.getFullYear() - startDate.getFullYear()) * 12 +
+        (paymentDate.getMonth() - startDate.getMonth());
+      // monthsElapsed is 0-indexed
+      const interestRate = getInterestRateForMonth(interestRateYears, monthsElapsed);
 
       const interestAccrued = calculateInterestBetweenDates(
         balanceBeforePayment,

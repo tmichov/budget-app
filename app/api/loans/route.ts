@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, principal, currency, totalMonths, interestRateYears, startDate } = await req.json();
+    const { name, principal, currency, totalMonths, interestRateYears, startDate, monthlyFee } = await req.json();
 
     if (!name || !principal || !currency || !totalMonths || !interestRateYears || !startDate) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
         totalMonths: parseInt(totalMonths),
         interestRateYears: JSON.stringify(interestRateYears),
         startDate: new Date(startDate),
+        monthlyFee: monthlyFee ? parseFloat(monthlyFee) : 0,
       },
       include: {
         payments: true,

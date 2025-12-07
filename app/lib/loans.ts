@@ -1,68 +1,183 @@
 /**
  * Loan calculation utilities for mortgage/loan management
+ * Adapted from KadeKolku project with correct amortization formula
  */
 
 export interface InterestRateSchedule {
-  years: number;
+  startMonth: number; // 0-indexed month when this rate starts
+  endMonth?: number; // 0-indexed month when this rate ends (optional)
   rate: number; // Annual interest rate percentage
 }
 
 /**
- * Calculate remaining balance on a loan at a specific date
+ * Get the applicable interest rate for a specific month
+ */
+export function getInterestRateForMonth(
+  periods: InterestRateSchedule[],
+  month: number // 0-indexed month number
+): number {
+  const period = periods.find(
+    (p) =>
+      month >= p.startMonth &&
+      (p.endMonth === undefined || month <= p.endMonth)
+  );
+  return period?.rate ?? 0;
+}
+
+/**
+ * Calculate monthly payment using standard amortization formula
+ * Payment = (Principal * MonthlyRate) / (1 - (1 + MonthlyRate)^-RemainingMonths)
+ */
+export function calculateMonthlyPayment(
+  balance: number,
+  annualRate: number,
+  remainingMonths: number
+): number {
+  const monthlyRate = annualRate / 100 / 12;
+
+  if (monthlyRate === 0) {
+    return balance / remainingMonths;
+  }
+
+  return parseFloat(
+    (
+      (balance * monthlyRate) /
+      (1 - Math.pow(1 + monthlyRate, -remainingMonths))
+    ).toFixed(2)
+  );
+}
+
+/**
+ * Calculate amortization schedule for a loan
+ * Recalculates payment each month based on remaining balance and months
+ * monthlyFee is added to the displayed payment but does NOT reduce principal
+ */
+export function calculateAmortizationSchedule(
+  principal: number,
+  totalMonths: number,
+  interestRateSchedule: InterestRateSchedule[],
+  startDate: Date,
+  existingPayments: Array<{ date: Date; amount: number }> = [],
+  fixedMonthlyPayment?: number,
+  monthlyFee: number = 0
+): Array<{
+  month: number;
+  date: Date;
+  beginningBalance: number;
+  payment: number;
+  principal: number;
+  interest: number;
+  fee: number;
+  endingBalance: number;
+  isPaid: boolean;
+}> {
+  const schedule = [];
+  let balance = principal;
+  const sortedPayments = [...existingPayments].sort(
+    (a, b) => a.date.getTime() - b.date.getTime()
+  );
+
+  // Create a map of payments by month for quick lookup
+  const paymentsByMonth = new Map<number, number>();
+  for (const payment of sortedPayments) {
+    const monthDate = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      1
+    );
+    let month = 0;
+    while (monthDate.toISOString().split("T")[0] < payment.date.toISOString().split("T")[0]) {
+      monthDate.setMonth(monthDate.getMonth() + 1);
+      month++;
+    }
+    if (paymentsByMonth.has(month)) {
+      paymentsByMonth.set(month, paymentsByMonth.get(month)! + payment.amount);
+    } else {
+      paymentsByMonth.set(month, payment.amount);
+    }
+  }
+
+  for (let month = 0; month < totalMonths; month++) {
+    const monthDate = new Date(startDate);
+    monthDate.setMonth(monthDate.getMonth() + month);
+
+    const rate = getInterestRateForMonth(interestRateSchedule, month);
+    const monthlyRate = rate / 100 / 12;
+
+    const beginningBalance = balance;
+    const remainingMonths = totalMonths - month;
+
+    // Calculate payment
+    let payment: number;
+    if (fixedMonthlyPayment) {
+      payment = fixedMonthlyPayment;
+    } else {
+      payment = calculateMonthlyPayment(balance, rate, remainingMonths);
+    }
+
+    // Calculate interest and principal
+    const interest = parseFloat((balance * monthlyRate).toFixed(2));
+    let principalPayment = parseFloat((payment - interest).toFixed(2));
+
+    // Check if a payment was made this month
+    const paymentMade = paymentsByMonth.get(month);
+    let isPaid = false;
+
+    if (paymentMade) {
+      // Actual payment was made
+      payment = paymentMade;
+      principalPayment = parseFloat((paymentMade - interest).toFixed(2));
+      isPaid = true;
+    }
+
+    // Update balance
+    balance -= principalPayment;
+    if (balance < 0) balance = 0;
+
+    const endingBalance = parseFloat(balance.toFixed(2));
+
+    schedule.push({
+      month: month + 1,
+      date: new Date(monthDate),
+      beginningBalance: parseFloat(beginningBalance.toFixed(2)),
+      payment: parseFloat((payment + monthlyFee).toFixed(2)), // Includes fee in displayed payment
+      principal: parseFloat(principalPayment.toFixed(2)),
+      interest,
+      fee: parseFloat(monthlyFee.toFixed(2)),
+      endingBalance,
+      isPaid,
+    });
+
+    if (balance <= 0) break;
+  }
+
+  return schedule;
+}
+
+/**
+ * Calculate remaining balance at a specific date
  */
 export function calculateRemainingBalance(
   principal: number,
   totalMonths: number,
   interestRateSchedule: InterestRateSchedule[],
   startDate: Date,
-  paymentsToDate: Array<{ amount: number; date: Date }>
+  paymentsToDate: Array<{ amount: number; date: Date }>,
+  monthlyFee: number = 0
 ): number {
-  let balance = principal;
-  let currentDate = new Date(startDate);
+  const schedule = calculateAmortizationSchedule(
+    principal,
+    totalMonths,
+    interestRateSchedule,
+    startDate,
+    paymentsToDate,
+    undefined,
+    monthlyFee
+  );
 
-  // Sort payments by date
-  const sortedPayments = [...paymentsToDate].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  // Calculate month by month
-  for (let month = 0; month < totalMonths; month++) {
-    const monthStart = new Date(startDate.getFullYear(), startDate.getMonth() + month, 1);
-    const monthEnd = new Date(startDate.getFullYear(), startDate.getMonth() + month + 1, 1);
-
-    // Get interest rate for this month
-    const yearsElapsed = month / 12;
-    const rate = getInterestRateForPeriod(interestRateSchedule, yearsElapsed);
-
-    // Calculate daily interest
-    const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
-    const dailyRate = (rate / 100) / 365;
-
-    let monthInterest = 0;
-    let currentCheckDate = new Date(monthStart);
-
-    while (currentCheckDate < monthEnd) {
-      // Find if there's a payment on this day
-      const payment = sortedPayments.find(
-        p => p.date.toDateString() === currentCheckDate.toDateString()
-      );
-
-      if (payment) {
-        // Apply payment (assuming it covers interest first, then principal)
-        const interestOwed = balance * dailyRate;
-        const principalPayment = Math.max(0, payment.amount - interestOwed);
-        balance -= principalPayment;
-        monthInterest -= interestOwed;
-      } else {
-        // Add daily interest
-        monthInterest += balance * dailyRate;
-      }
-
-      currentCheckDate.setDate(currentCheckDate.getDate() + 1);
-    }
-
-    balance += monthInterest;
-  }
-
-  return Math.max(0, balance);
+  return schedule.length > 0
+    ? schedule[schedule.length - 1].endingBalance
+    : principal;
 }
 
 /**
@@ -76,136 +191,37 @@ export function calculateInterestBetweenDates(
   loanStartDate: Date
 ): number {
   let totalInterest = 0;
-  let currentDate = new Date(startDate);
+  let currentMonth = 0;
 
-  while (currentDate < endDate) {
-    const yearsElapsed = (currentDate.getTime() - loanStartDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    const rate = getInterestRateForPeriod(interestRateSchedule, yearsElapsed);
-    const dailyRate = (rate / 100) / 365;
+  let currentDate = new Date(loanStartDate);
 
-    totalInterest += balance * dailyRate;
+  while (currentDate <= endDate) {
+    const monthEnd = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
+    const periodEnd =
+      monthEnd.getTime() < endDate.getTime() ? monthEnd : endDate;
+
+    const rate = getInterestRateForMonth(interestRateSchedule, currentMonth);
+    const monthlyRate = rate / 100 / 12;
+    const daysInMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    ).getDate();
+    const dailyRate = monthlyRate / daysInMonth;
+
+    const daysInPeriod = Math.floor(
+      (periodEnd.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    totalInterest += balance * dailyRate * daysInPeriod;
+
+    currentDate = new Date(periodEnd);
     currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return totalInterest;
-}
-
-/**
- * Get the interest rate for a specific period (in years) from the schedule
- */
-export function getInterestRateForPeriod(
-  schedule: InterestRateSchedule[],
-  yearsElapsed: number
-): number {
-  // Sort schedule by years
-  const sorted = [...schedule].sort((a, b) => a.years - b.years);
-
-  // Find the applicable rate
-  for (const period of sorted) {
-    if (yearsElapsed < period.years) {
-      return period.rate;
-    }
-  }
-
-  // Return the last rate if we're past all periods
-  return sorted[sorted.length - 1]?.rate || 0;
-}
-
-/**
- * Calculate amortization schedule for a loan with actual payments accounted for
- */
-export function calculateAmortizationSchedule(
-  principal: number,
-  totalMonths: number,
-  interestRateSchedule: InterestRateSchedule[],
-  startDate: Date,
-  existingPayments: Array<{ date: Date; amount: number }> = []
-): Array<{
-  month: number;
-  date: Date;
-  beginningBalance: number;
-  payment: number;
-  principal: number;
-  interest: number;
-  endingBalance: number;
-  isPaid: boolean;
-}> {
-  const schedule = [];
-  let balance = principal;
-  const sortedPayments = [...existingPayments].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  for (let month = 0; month < totalMonths; month++) {
-    const monthDate = new Date(startDate.getFullYear(), startDate.getMonth() + month, 1);
-    const yearsElapsed = month / 12;
-    const rate = getInterestRateForPeriod(interestRateSchedule, yearsElapsed);
-    const monthlyRate = rate / 100 / 12;
-
-    const beginningBalance = balance;
-    const interestPayment = beginningBalance * monthlyRate;
-
-    // Calculate regular principal payment (assumes equal principal payments)
-    const totalInterestOverLife = calculateTotalInterestOverLife(
-      principal,
-      totalMonths,
-      interestRateSchedule
-    );
-    const regularPayment = (principal + totalInterestOverLife) / totalMonths;
-    const principalPayment = Math.max(0, regularPayment - interestPayment);
-
-    // Check if this month has a payment
-    const monthEnd = new Date(startDate.getFullYear(), startDate.getMonth() + month + 1, 0);
-    const paymentInMonth = sortedPayments.find(
-      (p) => p.date >= monthDate && p.date <= monthEnd
-    );
-
-    let actualBalance = balance;
-    let isPaid = false;
-
-    if (paymentInMonth) {
-      // Payment was made this month
-      actualBalance -= Math.max(0, paymentInMonth.amount - interestPayment);
-      isPaid = true;
-    } else {
-      // No payment made, just accrue interest
-      actualBalance -= principalPayment;
-    }
-
-    schedule.push({
-      month: month + 1,
-      date: new Date(monthDate),
-      beginningBalance,
-      payment: regularPayment,
-      principal: principalPayment,
-      interest: interestPayment,
-      endingBalance: Math.max(0, actualBalance),
-      isPaid,
-    });
-
-    balance = actualBalance;
-  }
-
-  return schedule;
-}
-
-/**
- * Calculate total interest over the life of the loan (rough estimate)
- */
-export function calculateTotalInterestOverLife(
-  principal: number,
-  totalMonths: number,
-  interestRateSchedule: InterestRateSchedule[]
-): number {
-  let totalInterest = 0;
-  let balance = principal;
-
-  for (let month = 0; month < totalMonths; month++) {
-    const yearsElapsed = month / 12;
-    const rate = getInterestRateForPeriod(interestRateSchedule, yearsElapsed);
-    const monthlyRate = rate / 100 / 12;
-
-    totalInterest += balance * monthlyRate;
-    // Rough estimate: deduct equal principal each month
-    balance -= principal / totalMonths;
+    currentMonth++;
   }
 
   return totalInterest;

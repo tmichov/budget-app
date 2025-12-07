@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
 import prisma from '@/lib/prisma';
 import { generateVerificationToken, getTokenExpiration } from '@/lib/tokens';
 import { sendVerificationEmail } from '@/lib/email';
@@ -7,41 +6,42 @@ import { sendVerificationEmail } from '@/lib/email';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { email } = body;
 
-    if (!email || !password || !name) {
+    if (!email) {
       return NextResponse.json(
-        { message: 'Email, password, and name are required' },
+        { message: 'Email is required' },
         { status: 400 }
       );
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    // Find user by email
+    const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (existingUser) {
-      return NextResponse.json(
-        { message: 'Email already in use' },
-        { status: 409 }
-      );
+    if (!user) {
+      // For security, don't reveal if email exists or not
+      return NextResponse.json({
+        message: 'If an account with this email exists, a verification link has been sent.',
+      });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // If already verified, return success
+    if (user.emailVerified) {
+      return NextResponse.json({
+        message: 'Your email is already verified. You can log in now.',
+      });
+    }
 
-    // Generate verification token
+    // Generate new verification token
     const verificationToken = generateVerificationToken(email);
     const tokenExpiration = getTokenExpiration();
 
-    // Create new user with verification token
-    const newUser = await prisma.user.create({
+    // Update user with new token
+    await prisma.user.update({
+      where: { id: user.id },
       data: {
-        email,
-        password: hashedPassword,
-        name,
-        emailVerified: null,
         emailVerificationToken: verificationToken,
         emailVerificationTokenExpires: tokenExpiration,
       },
@@ -49,14 +49,13 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     const verificationUrl = `${process.env.NEXTAUTH_URL}/verify?token=${verificationToken}`;
-    await sendVerificationEmail(email, name, verificationUrl);
+    await sendVerificationEmail(email, user.name, verificationUrl);
 
     return NextResponse.json({
-      message: 'Registration successful. Please check your email to verify your account.',
-      email: newUser.email,
+      message: 'Verification email has been sent. Please check your inbox.',
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Resend verification error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
