@@ -4,10 +4,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useApi } from "@/hooks/useApi";
+import { useCurrency } from "@/context/CurrencyContext";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
 import { DatePicker } from "@/components/DatePicker";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import { format } from "date-fns";
 
 interface Category {
   id: string;
@@ -15,23 +17,44 @@ interface Category {
   icon: string;
 }
 
+interface WizardState {
+  type: "income" | "expense";
+  amount: string;
+  categoryId: string;
+  categoryName: string;
+  description: string;
+  date: string;
+}
+
+type WizardStep = "type" | "amount" | "category" | "date" | "description";
+
+const STEPS: WizardStep[] = ["type", "amount", "category", "date", "description"];
+
 export default function NewTransactionPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { request } = useApi();
+  const { currency } = useCurrency();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [newTransaction, setNewTransaction] = useState({
-    categoryId: "",
+  const [formData, setFormData] = useState<WizardState>({
+    type: "expense",
     amount: "",
-    type: "expense" as "income" | "expense",
+    categoryId: "",
+    categoryName: "",
     description: "",
     date: new Date().toISOString().split("T")[0],
   });
-  const [transactionError, setTransactionError] = useState("");
+
+  const [stepErrors, setStepErrors] = useState<Partial<Record<WizardStep, string>>>({});
+
+  const currentStep = STEPS[currentStepIndex];
 
   useEffect(() => {
     if (status === "loading") return;
@@ -47,9 +70,6 @@ export default function NewTransactionPage() {
       setLoading(true);
       const data = await request("/api/categories");
       setCategories(data);
-      if (data.length > 0) {
-        setNewTransaction((prev) => ({ ...prev, categoryId: data[0].id }));
-      }
       setError("");
     } catch (err) {
       setError(
@@ -60,43 +80,175 @@ export default function NewTransactionPage() {
     }
   };
 
-  const handleAddTransaction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setTransactionError("");
+  const validateStep = (step: WizardStep): boolean => {
+    const newErrors = { ...stepErrors };
+    delete newErrors[step];
 
-    if (!newTransaction.amount) {
-      setTransactionError("Amount is required");
-      return;
+    switch (step) {
+      case "type":
+        if (!formData.type) {
+          newErrors.type = "Please select a type";
+          return false;
+        }
+        break;
+      case "amount":
+        if (!formData.amount) {
+          newErrors.amount = "Amount is required";
+          return false;
+        }
+        if (parseFloat(formData.amount) <= 0) {
+          newErrors.amount = "Amount must be greater than 0";
+          return false;
+        }
+        break;
+      case "category":
+        if (formData.type === "expense" && !formData.categoryId) {
+          newErrors.category = "Category is required for expenses";
+          return false;
+        }
+        break;
+      case "date":
+        if (!formData.date) {
+          newErrors.date = "Date is required";
+          return false;
+        }
+        break;
     }
 
-    if (newTransaction.type === "expense" && !newTransaction.categoryId) {
-      setTransactionError("Category is required for expenses");
-      return;
+    setStepErrors(newErrors);
+    return true;
+  };
+
+  const goToNextStep = () => {
+    if (!validateStep(currentStep)) return;
+
+    if (currentStepIndex < STEPS.length - 1) {
+      setSlideDirection("right");
+      setCurrentStepIndex(currentStepIndex + 1);
     }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStepIndex > 0) {
+      setSlideDirection("left");
+      setCurrentStepIndex(currentStepIndex - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!validateStep(currentStep)) return;
 
     try {
+      setIsSubmitting(true);
       await request("/api/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...newTransaction,
-          amount: parseFloat(newTransaction.amount),
-          categoryId:
-            newTransaction.type === "income" ? null : newTransaction.categoryId,
+          type: formData.type,
+          amount: parseFloat(formData.amount),
+          categoryId: formData.type === "income" ? null : formData.categoryId,
+          description: formData.description,
+          date: formData.date,
         }),
       });
       router.push("/transactions");
     } catch (err) {
-      setTransactionError(
+      setError(
         err instanceof Error ? err.message : "Failed to create transaction",
       );
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const getIconComponent = (iconName: string) => {
+    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Wallet;
+    return Icon;
   };
 
   if (!session?.user) return null;
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 md:px-6 pb-32">
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideOutLeft {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-100%);
+          }
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes slideOutRight {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+        }
+
+        .slide-in-right {
+          animation: slideInRight 0.4s ease-out;
+        }
+
+        .slide-out-left {
+          animation: slideOutLeft 0.4s ease-in;
+        }
+
+        .slide-in-left {
+          animation: slideInLeft 0.4s ease-out;
+        }
+
+        .slide-out-right {
+          animation: slideOutRight 0.4s ease-in;
+        }
+
+        .amount-input {
+          font-size: 3rem;
+          font-weight: bold;
+          text-align: center;
+          letter-spacing: 0.05em;
+        }
+
+        .amount-input::-webkit-outer-spin-button,
+        .amount-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        .amount-input[type=number] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
+
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
@@ -107,9 +259,14 @@ export default function NewTransactionPage() {
           >
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-3xl font-bold text-foreground">
-            New Transaction
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              New Transaction
+            </h1>
+            <p className="text-sm text-text-secondary">
+              Step {currentStepIndex + 1} of {STEPS.length}
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -118,142 +275,331 @@ export default function NewTransactionPage() {
           </div>
         )}
 
-        <form onSubmit={handleAddTransaction} className="space-y-6">
-          {/* Type Toggle */}
-          <div>
-            <label className="block text-sm font-medium mb-3 text-foreground">
-              Type
-            </label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setNewTransaction({
-                    ...newTransaction,
-                    type: "expense",
-                  })
-                }
-                className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                  newTransaction.type === "expense"
-                    ? "bg-red-600 text-white shadow-md"
-                    : "bg-secondary text-foreground hover:opacity-80"
-                }`}
-              >
-                Expense
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setNewTransaction({
-                    ...newTransaction,
-                    type: "income",
-                  })
-                }
-                className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                  newTransaction.type === "income"
-                    ? "bg-green-600 text-white shadow-md"
-                    : "bg-secondary text-foreground hover:opacity-80"
-                }`}
-              >
-                Income
-              </button>
-            </div>
-          </div>
-
-          {/* Amount */}
-          <Input
-            type="number"
-            label="Amount"
-            placeholder="0.00"
-            step="0.01"
-            value={newTransaction.amount}
-            onChange={(e) =>
-              setNewTransaction({ ...newTransaction, amount: e.target.value })
-            }
-            error={transactionError}
-            required
-          />
-
-          {/* Category - Only for expenses */}
-          {newTransaction.type === "expense" && (
-            <div>
-              <label className="block text-sm font-medium mb-2 text-foreground">
-                Category
-              </label>
-              {loading ? (
-                <div className="p-3 text-center text-text-secondary">
-                  Loading categories...
+        <div className="flex gap-4 md:gap-8">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            <div
+              className="rounded-lg p-8"
+              style={{
+                backgroundColor: "var(--card)",
+                borderWidth: "1px",
+                borderColor: "var(--card-border)",
+              }}
+            >
+              {/* Step: Type */}
+              {currentStep === "type" && (
+                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                  <h2 className="text-xl font-bold text-foreground mb-6">
+                    What type of transaction?
+                  </h2>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setFormData({ ...formData, type: "expense" })}
+                      className="flex-1 py-12 rounded-lg font-semibold transition-all"
+                      style={{
+                        backgroundColor: formData.type === "expense" ? "#dc2626" : "var(--secondary)",
+                        color: formData.type === "expense" ? "white" : "var(--foreground)",
+                        border: "2px solid transparent",
+                        borderColor: formData.type === "expense" ? "#991b1b" : "var(--card-border)",
+                      }}
+                    >
+                      <div className="text-4xl mb-2">💸</div>
+                      <div>Expense</div>
+                    </button>
+                    <button
+                      onClick={() => setFormData({ ...formData, type: "income" })}
+                      className="flex-1 py-12 rounded-lg font-semibold transition-all"
+                      style={{
+                        backgroundColor: formData.type === "income" ? "#16a34a" : "var(--secondary)",
+                        color: formData.type === "income" ? "white" : "var(--foreground)",
+                        border: "2px solid transparent",
+                        borderColor: formData.type === "income" ? "#15803d" : "var(--card-border)",
+                      }}
+                    >
+                      <div className="text-4xl mb-2">💰</div>
+                      <div>Income</div>
+                    </button>
+                  </div>
                 </div>
-              ) : categories.length === 0 ? (
-                <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 text-yellow-700 dark:text-yellow-400 text-sm">
-                  <p className="mb-2">No categories yet. Create one first.</p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push("/transactions/categories/new")}
-                  >
-                    Create Category
-                  </Button>
+              )}
+
+              {/* Step: Amount */}
+              {currentStep === "amount" && (
+                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                  <h2 className="text-xl font-bold text-foreground mb-2">
+                    Amount
+                  </h2>
+                  <p className="text-sm text-text-secondary mb-8">
+                    Enter the {formData.type} amount
+                  </p>
+                  <div className="flex items-center justify-center gap-2 mb-8">
+                    <span style={{ color: "var(--text-secondary)" }} className="text-2xl">
+                      {currency}
+                    </span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      step="0.01"
+                      min="0"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && goToNextStep()}
+                      autoFocus
+                      className="amount-input bg-background text-foreground rounded-lg focus:outline-none transition-colors"
+                      style={{
+                        color: formData.type === "income" ? "#16a34a" : "#dc2626",
+                        borderBottom: "2px solid var(--primary)",
+                        paddingBottom: "0.5rem",
+                        width: "100%",
+                      }}
+                    />
+                  </div>
+                  {stepErrors.amount && (
+                    <p className="text-red-600 text-sm text-center">{stepErrors.amount}</p>
+                  )}
                 </div>
-              ) : (
-                <select
-                  value={newTransaction.categoryId}
-                  onChange={(e) =>
-                    setNewTransaction({
-                      ...newTransaction,
-                      categoryId: e.target.value,
-                    })
-                  }
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
-                  required
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+              )}
+
+              {/* Step: Category (only for expenses) */}
+              {currentStep === "category" && formData.type === "expense" && (
+                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                  <h2 className="text-xl font-bold text-foreground mb-6">
+                    Category
+                  </h2>
+                  {loading ? (
+                    <div className="p-6 text-center text-text-secondary">
+                      Loading categories...
+                    </div>
+                  ) : categories.length === 0 ? (
+                    <div
+                      className="p-6 rounded-lg border text-center"
+                      style={{
+                        backgroundColor: "var(--secondary)",
+                        borderColor: "var(--card-border)",
+                      }}
+                    >
+                      <p className="text-foreground mb-4">No categories yet</p>
+                      <Button
+                        onClick={() => router.push("/transactions/categories/new")}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Create Category
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {categories.map((category) => {
+                        const IconComponent = getIconComponent(category.icon);
+                        const isSelected = formData.categoryId === category.id;
+                        return (
+                          <button
+                            key={category.id}
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                categoryId: category.id,
+                                categoryName: category.name,
+                              })
+                            }
+                            className="p-4 rounded-lg flex items-center gap-3 transition-all text-left"
+                            style={{
+                              backgroundColor: isSelected ? "var(--primary)" : "var(--secondary)",
+                              color: isSelected ? "white" : "var(--foreground)",
+                              border: "2px solid transparent",
+                              borderColor: isSelected ? "var(--primary)" : "var(--card-border)",
+                            }}
+                          >
+                            <IconComponent size={20} />
+                            <span className="font-medium">{category.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {stepErrors.category && (
+                    <p className="text-red-600 text-sm mt-4">{stepErrors.category}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Step: Date */}
+              {currentStep === "date" && (
+                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                  <h2 className="text-xl font-bold text-foreground mb-6">
+                    When did this happen?
+                  </h2>
+                  <DatePicker
+                    value={formData.date}
+                    onChange={(date) => setFormData({ ...formData, date })}
+                  />
+                </div>
+              )}
+
+              {/* Step: Description */}
+              {currentStep === "description" && (
+                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                  <h2 className="text-xl font-bold text-foreground mb-6">
+                    Add a note (optional)
+                  </h2>
+                  <input
+                    type="text"
+                    placeholder="What was this for?"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                    autoFocus
+                    className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2"
+                    style={{
+                      backgroundColor: "var(--background)",
+                      borderColor: "var(--border)",
+                      color: "var(--foreground)",
+                      borderWidth: "1px",
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
+                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                  />
+                </div>
               )}
             </div>
-          )}
 
-          {/* Date */}
-          <DatePicker
-            label="Date"
-            value={newTransaction.date}
-            onChange={(date) => setNewTransaction({ ...newTransaction, date })}
-          />
+            {/* Navigation Buttons */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={goToPreviousStep}
+                disabled={currentStepIndex === 0}
+                className="flex items-center gap-2 px-4 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: currentStepIndex === 0 ? "var(--secondary)" : "var(--primary)",
+                  color: currentStepIndex === 0 ? "var(--text-secondary)" : "white",
+                }}
+              >
+                <ChevronLeft size={18} />
+                Back
+              </button>
 
-          {/* Description */}
-          <Input
-            label="Description (optional)"
-            placeholder="Add a note"
-            value={newTransaction.description}
-            onChange={(e) =>
-              setNewTransaction({
-                ...newTransaction,
-                description: e.target.value,
-              })
-            }
-          />
-
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" fullWidth>
-              Add Transaction
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              fullWidth
-              onClick={() => router.back()}
-            >
-              Cancel
-            </Button>
+              {currentStepIndex < STEPS.length - 1 ? (
+                <button
+                  onClick={goToNextStep}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all text-white"
+                  style={{
+                    backgroundColor: "var(--primary)",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.opacity = "0.9")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.opacity = "1")
+                  }
+                >
+                  Next
+                  <ChevronRight size={18} />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-3 rounded-lg transition-all text-white disabled:opacity-50"
+                  style={{
+                    backgroundColor: "#16a34a",
+                  }}
+                  onMouseEnter={(e) =>
+                    !isSubmitting && (e.currentTarget.style.opacity = "0.9")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.opacity = "1")
+                  }
+                >
+                  {isSubmitting ? "Creating..." : "Create Transaction"}
+                </button>
+              )}
+            </div>
           </div>
-        </form>
+
+          {/* Preview Sidebar */}
+          <div
+            className="hidden md:block w-64 rounded-lg p-6 sticky top-24 h-fit"
+            style={{
+              backgroundColor: "var(--card)",
+              borderWidth: "1px",
+              borderColor: "var(--card-border)",
+            }}
+          >
+            <h3 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wide">
+              Summary
+            </h3>
+            <div className="space-y-4">
+              {/* Type Preview */}
+              <div>
+                <p className="text-xs text-text-secondary mb-1">Type</p>
+                <p className="text-sm font-medium text-foreground">
+                  {formData.type === "income" ? "💰 Income" : "💸 Expense"}
+                </p>
+              </div>
+
+              {/* Amount Preview */}
+              {formData.amount && (
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">Amount</p>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{
+                      color: formData.type === "income" ? "#16a34a" : "#dc2626",
+                    }}
+                  >
+                    {currency} {parseFloat(formData.amount).toFixed(2)}
+                  </p>
+                </div>
+              )}
+
+              {/* Category Preview */}
+              {formData.type === "expense" && formData.categoryId && (
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">Category</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {formData.categoryName}
+                  </p>
+                </div>
+              )}
+
+              {/* Date Preview */}
+              {formData.date && (
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">Date</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {format(new Date(formData.date), "dd MMM yyyy")}
+                  </p>
+                </div>
+              )}
+
+              {/* Description Preview */}
+              {formData.description && (
+                <div>
+                  <p className="text-xs text-text-secondary mb-1">Note</p>
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {formData.description}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Progress Dots */}
+            <div className="flex gap-1 mt-6 pt-4 border-t" style={{ borderColor: "var(--card-border)" }}>
+              {STEPS.map((_, index) => (
+                <div
+                  key={index}
+                  className="h-1.5 flex-1 rounded-full transition-all"
+                  style={{
+                    backgroundColor:
+                      index <= currentStepIndex
+                        ? "var(--primary)"
+                        : "var(--secondary)",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
