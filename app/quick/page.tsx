@@ -23,6 +23,7 @@ function QuickAddContent() {
   const searchParams = useSearchParams();
   const { request } = useApi();
 
+  const isMinimal = searchParams.get('minimal') === 'true';
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -102,6 +103,71 @@ function QuickAddContent() {
   };
 
   if (!session?.user) return null;
+
+  // Minimal mode - just the essentials
+  if (isMinimal) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="w-full max-w-xs bg-background rounded-2xl shadow-2xl flex flex-col">
+          <div className="px-5 py-4 flex-1 flex flex-col gap-4">
+            {error && (
+              <div className="p-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="text-center py-4 text-sm">Loading...</div>
+            ) : (
+              <form onSubmit={handleAddTransaction} className="space-y-3 flex flex-col">
+                {/* Amount Input */}
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-text-secondary">
+                    {currency === 'MKD' ? 'МКД' : currency === 'USD' ? '$' : '€'}
+                  </span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    autoFocus
+                    className="w-full pl-12 pr-3 py-3 text-2xl font-bold rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                    required
+                  />
+                </div>
+
+                {/* Category - Only for expenses */}
+                {type === 'expense' && categories.length > 0 && (
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                    required
+                  >
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Save Button */}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 text-sm mt-2"
+                >
+                  {submitting ? 'Saving...' : 'Save'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
