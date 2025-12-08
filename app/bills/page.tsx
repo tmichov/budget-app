@@ -212,24 +212,37 @@ export default function BillsPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-card rounded-lg p-6 max-w-sm w-full">
-            <h2 className="text-lg font-bold text-foreground mb-2">
+          <div className="rounded-lg p-6 max-w-sm w-full" style={{ backgroundColor: 'var(--card)' }}>
+            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--foreground)' }}>
               Delete Bill?
             </h2>
-            <p className="text-sm text-text-secondary mb-6">
+            <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
               This will delete the bill and all its payment history.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground hover:bg-secondary transition-colors font-medium text-sm"
+                className="flex-1 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
+                style={{
+                  borderWidth: '1px',
+                  borderColor: 'var(--border)',
+                  backgroundColor: 'var(--background)',
+                  color: 'var(--foreground)',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--secondary)'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--background)'}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteBill}
                 disabled={deleting}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors font-medium text-sm"
+                className="flex-1 px-4 py-2 rounded-lg text-white transition-colors font-medium text-sm disabled:opacity-50"
+                style={{
+                  backgroundColor: '#dc2626',
+                }}
+                onMouseEnter={(e) => !deleting && (e.currentTarget.style.backgroundColor = '#b91c1c')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#dc2626')}
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

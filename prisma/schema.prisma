@@ -18,6 +18,7 @@ model User {
   emailVerificationToken          String?        // JWT token for email verification
   emailVerificationTokenExpires    DateTime?      // Token expiration time
   categories                      Category[]
+  categoryBudgets                 CategoryBudget[]
   transactions                    Transaction[]
   bills                           Bill[]
   billPayments                    BillPayment[]
@@ -34,10 +35,26 @@ model Category {
   name          String
   icon          String         // Lucide React icon name
   transactions  Transaction[]
+  budgets       CategoryBudget[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   @@unique([userId, name])
+}
+
+model CategoryBudget {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  year          Int            // e.g., 2025
+  month         Int            // 1-12
+  budgetAmount  Decimal        @db.Decimal(10, 2) // Budget amount for this month
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([categoryId, year, month])
 }
 
 model Transaction {

@@ -66,13 +66,22 @@ export function DatePicker({ value, onChange, label }: DatePickerProps) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors text-left"
+        className="w-full px-4 py-3 rounded-lg text-left focus:outline-none transition-colors"
+        style={{
+          backgroundColor: 'var(--background)',
+          color: 'var(--foreground)',
+          borderWidth: '1px',
+          borderColor: 'var(--border)',
+        }}
       >
         {displayDate}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-lg z-50 p-4">
+        <div
+          className="absolute top-full left-0 mt-2 w-80 rounded-lg shadow-lg z-50 p-4"
+          style={{ backgroundColor: 'var(--card)', borderColor: 'var(--card-border)', borderWidth: '1px' }}
+        >
           {/* Month Navigation */}
           <div className="flex items-center justify-between mb-4">
             <button

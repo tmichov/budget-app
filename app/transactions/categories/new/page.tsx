@@ -24,6 +24,7 @@ const AVAILABLE_ICONS = [
   "Gift",
   "TrendingUp",
   "DollarSign",
+  "Cat",
 ] as const;
 
 export default function NewCategoryPage() {
