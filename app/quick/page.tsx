@@ -104,101 +104,105 @@ function QuickAddContent() {
   if (!session?.user) return null;
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 flex flex-col">
-      <div className="max-w-md mx-auto w-full">
-        {/* Minimal Header */}
-        <div className="flex items-center gap-3 mb-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="w-full max-w-sm bg-background rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border sticky top-0 bg-background rounded-t-2xl">
+          <h1 className="text-xl font-bold text-foreground">
+            Add {type === 'expense' ? 'Expense' : 'Income'}
+          </h1>
           <button
             onClick={() => router.back()}
-            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
-            aria-label="Go back"
+            className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors flex-shrink-0"
+            aria-label="Close"
           >
             <ChevronLeft size={24} />
           </button>
-          <h1 className="text-2xl font-bold text-foreground">
-            Add {type === 'expense' ? 'Expense' : 'Income'}
-          </h1>
         </div>
 
-        {error && (
-          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-4">
-            {error}
-          </div>
-        )}
+        {/* Modal Content */}
+        <div className="px-6 py-4 flex-1 flex flex-col">
 
-        {loading ? (
-          <div className="text-center py-8">Loading categories...</div>
-        ) : (
-          <form onSubmit={handleAddTransaction} className="space-y-4 flex flex-col flex-1">
-            {/* Amount - Big and prominent */}
-            <div>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-text-secondary">
-                  {currency === 'MKD' ? 'МКД' : currency === 'USD' ? '$' : '€'}
-                </span>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  autoFocus
-                  className="w-full pl-16 pr-4 py-4 text-3xl font-bold rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
-                  required
-                />
+          {error && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-4">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-8">Loading categories...</div>
+          ) : (
+            <form onSubmit={handleAddTransaction} className="space-y-4 flex flex-col flex-1">
+              {/* Amount - Big and prominent */}
+              <div>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-text-secondary">
+                    {currency === 'MKD' ? 'МКД' : currency === 'USD' ? '$' : '€'}
+                  </span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    autoFocus
+                    className="w-full pl-16 pr-4 py-4 text-3xl font-bold rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Category - Only for expenses */}
-            {type === 'expense' && categories.length > 0 && (
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
-                required
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            )}
+              {/* Category - Only for expenses */}
+              {type === 'expense' && categories.length > 0 && (
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-colors"
+                  required
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              )}
 
-            {/* Date */}
-            <DatePicker
-              label="Date"
-              value={date}
-              onChange={(newDate) => setDate(newDate)}
-            />
+              {/* Date */}
+              <DatePicker
+                label="Date"
+                value={date}
+                onChange={(newDate) => setDate(newDate)}
+              />
 
-            {/* Description */}
-            <Input
-              label="Description (optional)"
-              placeholder="Add a note..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              {/* Description */}
+              <Input
+                label="Description (optional)"
+                placeholder="Add a note..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
 
-            {/* Buttons */}
-            <div className="flex gap-2 pt-4 mt-auto">
-              <Button
-                type="submit"
-                fullWidth
-                disabled={submitting}
-              >
-                {submitting ? 'Saving...' : 'Add'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        )}
+              {/* Buttons */}
+              <div className="flex gap-2 pt-4 mt-auto">
+                <Button
+                  type="submit"
+                  fullWidth
+                  disabled={submitting}
+                >
+                  {submitting ? 'Saving...' : 'Add'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
