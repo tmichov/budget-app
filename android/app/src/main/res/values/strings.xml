@@ -8,6 +8,4 @@
     <!-- App Shortcuts -->
     <string name="shortcut_add_expense_short">Add Expense</string>
     <string name="shortcut_add_expense_long">Quick add expense transaction</string>
-    <string name="shortcut_add_income_short">Add Income</string>
-    <string name="shortcut_add_income_long">Quick add income transaction</string>
 </resources>
