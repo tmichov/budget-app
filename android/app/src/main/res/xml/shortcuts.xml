@@ -7,16 +7,9 @@
         android:shortcutShortLabel="@string/shortcut_add_expense_short"
         android:shortcutLongLabel="@string/shortcut_add_expense_long">
         <intent
-            android:action="android.intent.action.VIEW"
+            android:action="android.intent.action.MAIN"
             android:targetPackage="com.kadekolku.app"
-            android:targetClass="com.kadekolku.app.MainActivity">
-            <extra
-                android:name="shortcut_action"
-                android:value="add_transaction" />
-            <extra
-                android:name="transaction_type"
-                android:value="expense" />
-        </intent>
+            android:targetClass="com.kadekolku.app.QuickAddActivity" />
         <categories android:name="android.shortcut.conversation" />
     </shortcut>
 </shortcuts>

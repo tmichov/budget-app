@@ -1,6 +1,7 @@
 package com.kadekolku.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
@@ -8,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        extractAndStoreAuthToken();
         handleIntent(getIntent());
     }
 
@@ -48,5 +50,27 @@ public class MainActivity extends BridgeActivity {
                 null
             );
         }, 500);
+    }
+
+    private void extractAndStoreAuthToken() {
+        // Extract auth token from web app's localStorage and store in SharedPreferences
+        bridge.getWebView().postDelayed(() -> {
+            bridge.getWebView().evaluateJavascript(
+                "(function() {" +
+                "  let token = localStorage.getItem('token');" +
+                "  if (!token) {" +
+                "    token = localStorage.getItem('next-auth.session-token');" +
+                "  }" +
+                "  return token || '';" +
+                "})()",
+                result -> {
+                    if (result != null && !result.isEmpty()) {
+                        String token = result.replace("\"", "");
+                        SharedPreferences prefs = getSharedPreferences("kadekolku_prefs", MODE_PRIVATE);
+                        prefs.edit().putString("auth_token", token).apply();
+                    }
+                }
+            );
+        }, 1000);
     }
 }
