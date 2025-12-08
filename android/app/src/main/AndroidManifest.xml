@@ -40,11 +40,17 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.kadekolku.app.SUBMIT_TRANSACTION" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_transaction_info" />
         </receiver>
+
+        <!-- Widget Service for handling submissions -->
+        <service
+            android:name=".WidgetService"
+            android:exported="false" />
 
     </application>
 

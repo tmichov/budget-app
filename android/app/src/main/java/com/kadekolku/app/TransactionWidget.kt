@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
+import android.widget.Toast
 
 class TransactionWidget : AppWidgetProvider() {
     override fun onUpdate(
@@ -18,6 +19,27 @@ class TransactionWidget : AppWidgetProvider() {
         }
     }
 
+    override fun onReceive(context: Context?, intent: Intent?) {
+        super.onReceive(context, intent)
+        if (intent?.action == "com.kadekolku.app.SUBMIT_TRANSACTION" && context != null) {
+            val amount = intent.getStringExtra("amount") ?: return
+            val categoryId = intent.getStringExtra("categoryId") ?: return
+            val token = intent.getStringExtra("token") ?: return
+
+            if (amount.isEmpty()) {
+                Toast.makeText(context, "Please enter amount", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            // Start service to handle submission
+            val serviceIntent = Intent(context, WidgetService::class.java)
+            serviceIntent.putExtra("amount", amount)
+            serviceIntent.putExtra("categoryId", categoryId)
+            serviceIntent.putExtra("token", token)
+            context.startService(serviceIntent)
+        }
+    }
+
     companion object {
         private fun updateAppWidget(
             context: Context,
@@ -26,19 +48,25 @@ class TransactionWidget : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_transaction)
 
-            // Intent to open app when widget is clicked
-            val intent = Intent(context, MainActivity::class.java)
-            intent.action = "com.kadekolku.app.ADD_TRANSACTION"
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // Get stored token from SharedPreferences
+            val sharedPref = context.getSharedPreferences("kadekolku_prefs", Context.MODE_PRIVATE)
+            val token = sharedPref.getString("auth_token", "") ?: ""
+            val categoryId = sharedPref.getString("last_category", "") ?: ""
 
-            val pendingIntent = PendingIntent.getActivity(
+            // Submit button intent
+            val submitIntent = Intent(context, TransactionWidget::class.java)
+            submitIntent.action = "com.kadekolku.app.SUBMIT_TRANSACTION"
+            submitIntent.putExtra("categoryId", categoryId)
+            submitIntent.putExtra("token", token)
+
+            val submitPendingIntent = PendingIntent.getBroadcast(
                 context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                appWidgetId,
+                submitIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
             )
 
-            views.setOnClickPendingIntent(R.id.widget_button, pendingIntent)
+            views.setOnClickPendingIntent(R.id.widget_submit, submitPendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }

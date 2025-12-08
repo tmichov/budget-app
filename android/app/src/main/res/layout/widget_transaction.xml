@@ -2,42 +2,54 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:gravity="center"
+    android:background="#f3f1ed"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="12dp">
 
-    <FrameLayout
-        android:id="@+id/widget_button"
-        android:layout_width="match_parent"
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Quick Add"
+        android:textColor="#3a3a38"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Amount Input -->
+    <EditText
+        android:id="@+id/widget_amount"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@android:color/white"
+        android:hint="Amount"
+        android:inputType="numberDecimal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textColor="#3a3a38"
+        android:textColorHint="#999999"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Category Spinner -->
+    <Spinner
+        android:id="@+id/widget_category"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@android:color/white"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Submit Button -->
+    <Button
+        android:id="@+id/widget_submit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
         android:background="@drawable/widget_button_bg"
-        android:foreground="?android:attr/selectableItemBackground"
-        android:padding="20dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="➕"
-                android:textSize="32sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Add Transaction"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-    </FrameLayout>
+        android:text="Add"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
 </LinearLayout>
