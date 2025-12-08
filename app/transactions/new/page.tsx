@@ -69,8 +69,14 @@ export default function NewTransactionPage() {
   const [stepErrors, setStepErrors] = useState<
     Partial<Record<WizardStep, string>>
   >({});
+  const [categorySearch, setCategorySearch] = useState("");
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const currentStep = STEPS[currentStepIndex];
+
+  const filteredCategories = categories.filter((cat) =>
+    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
 
   useEffect(() => {
     if (status === "loading") return;
@@ -433,37 +439,114 @@ export default function NewTransactionPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {categories.map((category) => {
-                        const IconComponent = getIconComponent(category.icon);
-                        const isSelected = formData.categoryId === category.id;
-                        return (
-                          <button
-                            key={category.id}
-                            onClick={() =>
-                              setFormData({
-                                ...formData,
-                                categoryId: category.id,
-                                categoryName: category.name,
-                              })
-                            }
-                            className="p-4 rounded-lg flex items-center gap-3 transition-all text-left"
-                            style={{
-                              backgroundColor: isSelected
-                                ? "var(--primary)"
-                                : "var(--secondary)",
-                              color: isSelected ? "white" : "var(--foreground)",
-                              border: "2px solid transparent",
-                              borderColor: isSelected
-                                ? "var(--primary)"
-                                : "var(--card-border)",
-                            }}
-                          >
-                            <IconComponent size={20} />
-                            <span className="font-medium">{category.name}</span>
-                          </button>
-                        );
-                      })}
+                    <div className="relative">
+                      {/* Search Input */}
+                      <div
+                        className="rounded-lg border transition-colors focus-within:ring-2"
+                        style={{
+                          backgroundColor: "var(--background)",
+                          borderColor: showCategoryDropdown
+                            ? "var(--primary)"
+                            : "var(--border)",
+                          borderWidth: "1px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          placeholder="Search categories..."
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          onFocus={() => setShowCategoryDropdown(true)}
+                          className="w-full px-4 py-3 bg-transparent text-foreground focus:outline-none"
+                          style={{ color: "var(--foreground)" }}
+                        />
+                      </div>
+
+                      {/* Dropdown List */}
+                      {showCategoryDropdown && (
+                        <div
+                          className="absolute top-full left-0 right-0 mt-2 rounded-lg border shadow-lg z-50 max-h-72 overflow-y-auto"
+                          style={{
+                            backgroundColor: "var(--card)",
+                            borderColor: "var(--card-border)",
+                            borderWidth: "1px",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {filteredCategories.length === 0 ? (
+                            <div className="p-4 text-center text-text-secondary">
+                              No categories found
+                            </div>
+                          ) : (
+                            filteredCategories.map((category) => {
+                              const IconComponent = getIconComponent(
+                                category.icon
+                              );
+                              const isSelected =
+                                formData.categoryId === category.id;
+                              return (
+                                <button
+                                  key={category.id}
+                                  onClick={() => {
+                                    setFormData({
+                                      ...formData,
+                                      categoryId: category.id,
+                                      categoryName: category.name,
+                                    });
+                                    setShowCategoryDropdown(false);
+                                    setCategorySearch("");
+                                  }}
+                                  className="w-full px-4 py-3 flex items-center gap-3 transition-colors text-left hover:opacity-80"
+                                  style={{
+                                    backgroundColor: isSelected
+                                      ? "var(--primary)"
+                                      : "transparent",
+                                    color: isSelected
+                                      ? "white"
+                                      : "var(--foreground)",
+                                    borderBottom: "1px solid var(--card-border)",
+                                  }}
+                                >
+                                  <IconComponent
+                                    size={20}
+                                    className="flex-shrink-0"
+                                  />
+                                  <span className="font-medium flex-1">
+                                    {category.name}
+                                  </span>
+                                  {isSelected && (
+                                    <div className="text-lg">✓</div>
+                                  )}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+
+                      {/* Selected Category Display */}
+                      {formData.categoryId && !showCategoryDropdown && (
+                        <div className="mt-4 p-4 rounded-lg flex items-center gap-3" style={{ backgroundColor: "var(--secondary)" }}>
+                          {(() => {
+                            const cat = categories.find(
+                              (c) => c.id === formData.categoryId
+                            );
+                            const Icon = cat
+                              ? getIconComponent(cat.icon)
+                              : null;
+                            return (
+                              <>
+                                {Icon && (
+                                  <Icon size={20} className="text-primary" />
+                                )}
+                                <span className="font-medium text-foreground">
+                                  {formData.categoryName}
+                                </span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   )}
                   {stepErrors.category && (
