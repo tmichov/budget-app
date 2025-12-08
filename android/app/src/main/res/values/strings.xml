@@ -4,4 +4,10 @@
     <string name="title_activity_main">Kade Kolku</string>
     <string name="package_name">com.kadekolku.app</string>
     <string name="custom_url_scheme">com.kadekolku.app</string>
+
+    <!-- App Shortcuts -->
+    <string name="shortcut_add_expense_short">Add Expense</string>
+    <string name="shortcut_add_expense_long">Quick add expense transaction</string>
+    <string name="shortcut_add_income_short">Add Income</string>
+    <string name="shortcut_add_income_long">Quick add income transaction</string>
 </resources>
