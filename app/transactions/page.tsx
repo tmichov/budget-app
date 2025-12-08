@@ -124,21 +124,19 @@ export default function TransactionsPage() {
   if (loading) return <div className="p-4 text-center">Loading...</div>;
 
   // Calculate category spending (expenses only)
-  const categorySpending = categories.map((category) => {
-    const spent = transactions
-      .filter(
-        (t) =>
-          t.type === "expense" &&
-          t.categoryId === category.id
-      )
-      .reduce((sum, t) => sum + t.amount, 0);
-    return {
-      name: category.name,
-      value: parseFloat(spent.toFixed(2)),
-      categoryId: category.id,
-      icon: category.icon,
-    };
-  }).filter((c) => c.value > 0);
+  const categorySpending = categories
+    .map((category) => {
+      const spent = transactions
+        .filter((t) => t.type === "expense" && t.categoryId === category.id)
+        .reduce((sum, t) => sum + t.amount, 0);
+      return {
+        name: category.name,
+        value: parseFloat(spent.toFixed(2)),
+        categoryId: category.id,
+        icon: category.icon,
+      };
+    })
+    .filter((c) => c.value > 0);
 
   const totalExpense = categorySpending.reduce((sum, c) => sum + c.value, 0);
 
@@ -188,8 +186,12 @@ export default function TransactionsPage() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Transactions</h1>
-          <p className="text-text-secondary">View and manage your transactions</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Transactions
+          </h1>
+          <p className="text-text-secondary">
+            View and manage your transactions
+          </p>
         </div>
 
         {/* Action Buttons */}
@@ -222,10 +224,9 @@ export default function TransactionsPage() {
               borderColor: "var(--card-border)",
             }}
           >
-            <h2 className="text-lg font-bold text-foreground mb-4">Spending Overview</h2>
             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
               {/* Chart */}
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
                     data={categorySpending}
@@ -242,7 +243,9 @@ export default function TransactionsPage() {
                     onMouseLeave={() => setSelectedCategory(null)}
                     onClick={(data) => {
                       setSelectedCategory(
-                        selectedCategory === data.categoryId ? null : data.categoryId
+                        selectedCategory === data.categoryId
+                          ? null
+                          : data.categoryId,
                       );
                     }}
                     style={{ cursor: "pointer" }}
@@ -252,7 +255,8 @@ export default function TransactionsPage() {
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
                         opacity={
-                          !selectedCategory || selectedCategory === entry.categoryId
+                          !selectedCategory ||
+                          selectedCategory === entry.categoryId
                             ? 1
                             : 0.3
                         }
@@ -260,7 +264,9 @@ export default function TransactionsPage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => `${currency} ${value.toFixed(2)}`}
+                    formatter={(value: number) =>
+                      `${currency} ${value.toFixed(2)}`
+                    }
                     contentStyle={{
                       backgroundColor: "var(--background)",
                       border: "1px solid var(--border)",
@@ -288,8 +294,11 @@ export default function TransactionsPage() {
                       {currency} {selectedCategoryData.value.toFixed(2)}
                     </p>
                     <p className="text-xs text-text-secondary">
-                      {((selectedCategoryData.value / totalExpense) * 100).toFixed(1)}%
-                      of total
+                      {(
+                        (selectedCategoryData.value / totalExpense) *
+                        100
+                      ).toFixed(1)}
+                      % of total
                     </p>
                   </>
                 ) : (
@@ -318,7 +327,9 @@ export default function TransactionsPage() {
                   key={category.categoryId}
                   onClick={() =>
                     setSelectedCategory(
-                      selectedCategory === category.categoryId ? null : category.categoryId
+                      selectedCategory === category.categoryId
+                        ? null
+                        : category.categoryId,
                     )
                   }
                   className="px-3 py-1 rounded-full text-xs font-medium transition-all"
@@ -332,7 +343,8 @@ export default function TransactionsPage() {
                         ? "white"
                         : "var(--foreground)",
                     opacity:
-                      !selectedCategory || selectedCategory === category.categoryId
+                      !selectedCategory ||
+                      selectedCategory === category.categoryId
                         ? 1
                         : 0.5,
                   }}
@@ -351,15 +363,13 @@ export default function TransactionsPage() {
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-1 px-3 py-2 rounded-lg transition-colors"
             style={{
-              backgroundColor: filterByCategory ? "var(--primary)" : "var(--secondary)",
+              backgroundColor: filterByCategory
+                ? "var(--primary)"
+                : "var(--secondary)",
               color: filterByCategory ? "white" : "var(--foreground)",
             }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.opacity = "0.8")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.opacity = "1")
-            }
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
           >
             <Filter size={16} />
             <span className="text-sm">Filter</span>
@@ -376,7 +386,9 @@ export default function TransactionsPage() {
               borderColor: "var(--card-border)",
             }}
           >
-            <p className="text-sm font-medium text-foreground mb-3">Filter by Category</p>
+            <p className="text-sm font-medium text-foreground mb-3">
+              Filter by Category
+            </p>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
@@ -427,7 +439,9 @@ export default function TransactionsPage() {
         <div>
           {sortedTransactions.length === 0 ? (
             <p className="text-text-secondary text-center py-8">
-              {filterByCategory ? "No transactions in this category" : "No transactions yet"}
+              {filterByCategory
+                ? "No transactions in this category"
+                : "No transactions yet"}
             </p>
           ) : (
             <div className="space-y-2">
@@ -464,7 +478,10 @@ export default function TransactionsPage() {
                       }}
                     >
                       <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 rounded-lg" style={{ backgroundColor: "var(--secondary)" }}>
+                        <div
+                          className="p-2 rounded-lg"
+                          style={{ backgroundColor: "var(--secondary)" }}
+                        >
                           {IconComponent ? (
                             <IconComponent size={18} className="text-primary" />
                           ) : (
@@ -513,10 +530,12 @@ export default function TransactionsPage() {
                           className="hidden md:block p-1 text-red-600 rounded transition-colors"
                           style={{ backgroundColor: "transparent" }}
                           onMouseEnter={(e) =>
-                            (e.currentTarget.style.backgroundColor = "var(--danger-light)")
+                            (e.currentTarget.style.backgroundColor =
+                              "var(--danger-light)")
                           }
                           onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor = "transparent")
+                            (e.currentTarget.style.backgroundColor =
+                              "transparent")
                           }
                           title="Delete transaction"
                         >
@@ -538,10 +557,16 @@ export default function TransactionsPage() {
               className="rounded-lg p-6 max-w-sm w-full"
               style={{ backgroundColor: "var(--card)" }}
             >
-              <h2 className="text-lg font-bold mb-2" style={{ color: "var(--foreground)" }}>
+              <h2
+                className="text-lg font-bold mb-2"
+                style={{ color: "var(--foreground)" }}
+              >
                 Delete Transaction?
               </h2>
-              <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
+              <p
+                className="text-sm mb-6"
+                style={{ color: "var(--text-secondary)" }}
+              >
                 This action cannot be undone.
               </p>
               <div className="flex gap-3">
@@ -558,7 +583,8 @@ export default function TransactionsPage() {
                     (e.currentTarget.style.backgroundColor = "var(--secondary)")
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "var(--background)")
+                    (e.currentTarget.style.backgroundColor =
+                      "var(--background)")
                   }
                 >
                   Cancel
@@ -569,7 +595,8 @@ export default function TransactionsPage() {
                   className="flex-1 px-4 py-2 rounded-lg text-white transition-colors font-medium text-sm disabled:opacity-50"
                   style={{ backgroundColor: "#dc2626" }}
                   onMouseEnter={(e) =>
-                    !deleting && (e.currentTarget.style.backgroundColor = "#b91c1c")
+                    !deleting &&
+                    (e.currentTarget.style.backgroundColor = "#b91c1c")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "#dc2626")

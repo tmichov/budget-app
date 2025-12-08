@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useApi } from '@/hooks/useApi';
-import { Button } from '@/components/Button';
-import { Input } from '@/components/Input';
-import { ArrowLeft } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useApi } from "@/hooks/useApi";
+import { Button } from "@/components/Button";
+import { Input } from "@/components/Input";
+import { ArrowLeft } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 
 const ICON_OPTIONS = [
-  'Zap',      // Electricity
-  'Droplets', // Water
-  'Wifi',     // Internet
-  'Phone',    // Mobile/Phone
-  'Home',     // Rent/Home
-  'Gas',      // Gas
-  'Shield',   // Insurance
-  'Pill',     // Medicine
-  'Car',      // Car/Transport
-  'DollarSign', // Miscellaneous
-  'UtensilsCrossed', // Groceries
-  'Tv',       // Streaming/TV
+  "Zap", // Electricity
+  "Droplets", // Water
+  "Flame", // Heating
+  "Wifi", // Internet
+  "Phone", // Mobile/Phone
+  "Home", // Rent/Home
+  "Gas", // Gas
+  "Shield", // Insurance
+  "Pill", // Medicine
+  "Car", // Car/Transport
+  "DollarSign", // Miscellaneous
+  "Tv", // Streaming/TV
 ];
 
 export default function NewBillPage() {
@@ -29,40 +29,40 @@ export default function NewBillPage() {
   const router = useRouter();
   const { request } = useApi();
 
-  const [name, setName] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('Zap');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("Zap");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (status === 'loading') return;
-    if (status === 'unauthenticated') {
-      router.push('/login');
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
   }, [status, router]);
 
   const handleAddBill = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!name.trim()) {
-      setError('Bill name is required');
+      setError("Bill name is required");
       return;
     }
 
     try {
       setLoading(true);
-      await request('/api/bills', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await request("/api/bills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
           icon: selectedIcon,
         }),
       });
-      router.push('/bills');
+      router.push("/bills");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create bill');
+      setError(err instanceof Error ? err.message : "Failed to create bill");
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,9 @@ export default function NewBillPage() {
 
           {/* Icon Selection */}
           <div>
-            <label className="block text-sm font-medium mb-3 text-foreground">Icon</label>
+            <label className="block text-sm font-medium mb-3 text-foreground">
+              Icon
+            </label>
 
             {/* Preview */}
             <div className="flex items-center justify-center p-4 bg-secondary rounded-lg mb-4">
@@ -133,8 +135,8 @@ export default function NewBillPage() {
                     onClick={() => setSelectedIcon(iconName)}
                     className={`p-3 rounded-lg transition-all ${
                       isSelected
-                        ? 'bg-primary text-white border-2 border-primary'
-                        : 'bg-secondary text-foreground hover:opacity-80 border-2 border-transparent'
+                        ? "bg-primary text-white border-2 border-primary"
+                        : "bg-secondary text-foreground hover:opacity-80 border-2 border-transparent"
                     }`}
                     title={iconName}
                   >
@@ -147,12 +149,8 @@ export default function NewBillPage() {
 
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button
-              type="submit"
-              fullWidth
-              disabled={loading}
-            >
-              {loading ? 'Creating...' : 'Create Bill'}
+            <Button type="submit" fullWidth disabled={loading}>
+              {loading ? "Creating..." : "Create Bill"}
             </Button>
             <Button
               type="button"

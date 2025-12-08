@@ -7,7 +7,13 @@ import { useApi } from "@/hooks/useApi";
 import { useCurrency } from "@/context/CurrencyContext";
 import { Button } from "@/components/Button";
 import { DatePicker } from "@/components/DatePicker";
-import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { format } from "date-fns";
 
@@ -28,7 +34,13 @@ interface WizardState {
 
 type WizardStep = "type" | "amount" | "category" | "date" | "description";
 
-const STEPS: WizardStep[] = ["type", "amount", "category", "date", "description"];
+const STEPS: WizardStep[] = [
+  "type",
+  "amount",
+  "category",
+  "date",
+  "description",
+];
 
 export default function NewTransactionPage() {
   const { data: session, status } = useSession();
@@ -40,7 +52,9 @@ export default function NewTransactionPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">(
+    "right",
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<WizardState>({
@@ -52,7 +66,9 @@ export default function NewTransactionPage() {
     date: new Date().toISOString().split("T")[0],
   });
 
-  const [stepErrors, setStepErrors] = useState<Partial<Record<WizardStep, string>>>({});
+  const [stepErrors, setStepErrors] = useState<
+    Partial<Record<WizardStep, string>>
+  >({});
 
   const currentStep = STEPS[currentStepIndex];
 
@@ -288,32 +304,48 @@ export default function NewTransactionPage() {
             >
               {/* Step: Type */}
               {currentStep === "type" && (
-                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                <div
+                  className={
+                    slideDirection === "right"
+                      ? "slide-in-right"
+                      : "slide-in-left"
+                  }
+                >
                   <h2 className="text-xl font-bold text-foreground mb-8">
                     What type of transaction?
                   </h2>
                   <div className="flex gap-4">
                     <button
-                      onClick={() => setFormData({ ...formData, type: "expense" })}
-                      className="flex-1 py-16 rounded-lg font-semibold transition-all flex flex-col items-center justify-center gap-3"
+                      onClick={() => {
+                        setFormData({ ...formData, type: "expense" });
+                        setTimeout(() => {
+                          setSlideDirection("right");
+                          setCurrentStepIndex(1);
+                        }, 0);
+                      }}
+                      className="flex-1 py-16 rounded-lg font-semibold transition-all flex flex-col items-center justify-center gap-3 cursor-pointer hover:shadow-lg"
                       style={{
-                        backgroundColor: formData.type === "expense" ? "#dc2626" : "var(--secondary)",
-                        color: formData.type === "expense" ? "white" : "var(--foreground)",
-                        border: "2px solid",
-                        borderColor: formData.type === "expense" ? "#dc2626" : "var(--card-border)",
+                        backgroundColor: "var(--secondary)",
+                        color: "var(--foreground)",
+                        border: "2px solid var(--card-border)",
                       }}
                     >
                       <TrendingDown size={32} strokeWidth={1.5} />
                       <div>Expense</div>
                     </button>
                     <button
-                      onClick={() => setFormData({ ...formData, type: "income" })}
-                      className="flex-1 py-16 rounded-lg font-semibold transition-all flex flex-col items-center justify-center gap-3"
+                      onClick={() => {
+                        setFormData({ ...formData, type: "income" });
+                        setTimeout(() => {
+                          setSlideDirection("right");
+                          setCurrentStepIndex(1);
+                        }, 0);
+                      }}
+                      className="flex-1 py-16 rounded-lg font-semibold transition-all flex flex-col items-center justify-center gap-3 cursor-pointer hover:shadow-lg"
                       style={{
-                        backgroundColor: formData.type === "income" ? "#16a34a" : "var(--secondary)",
-                        color: formData.type === "income" ? "white" : "var(--foreground)",
-                        border: "2px solid",
-                        borderColor: formData.type === "income" ? "#16a34a" : "var(--card-border)",
+                        backgroundColor: "var(--secondary)",
+                        color: "var(--foreground)",
+                        border: "2px solid var(--card-border)",
                       }}
                     >
                       <TrendingUp size={32} strokeWidth={1.5} />
@@ -325,29 +357,32 @@ export default function NewTransactionPage() {
 
               {/* Step: Amount */}
               {currentStep === "amount" && (
-                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                <div
+                  className={
+                    slideDirection === "right"
+                      ? "slide-in-right"
+                      : "slide-in-left"
+                  }
+                >
                   <h2 className="text-xl font-bold text-foreground mb-2">
                     Amount
                   </h2>
-                  <p className="text-sm text-text-secondary mb-8">
-                    Enter the {formData.type} amount
-                  </p>
                   <div className="flex items-center justify-center gap-2 mb-8">
-                    <span style={{ color: "var(--text-secondary)" }} className="text-2xl">
-                      {currency}
-                    </span>
                     <input
                       type="number"
                       placeholder="0"
                       step="0.01"
                       min="0"
                       value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, amount: e.target.value })
+                      }
                       onKeyDown={(e) => e.key === "Enter" && goToNextStep()}
                       autoFocus
                       className="amount-input bg-background text-foreground rounded-lg focus:outline-none transition-colors"
                       style={{
-                        color: formData.type === "income" ? "#16a34a" : "#dc2626",
+                        color:
+                          formData.type === "income" ? "#16a34a" : "#dc2626",
                         borderBottom: "2px solid var(--primary)",
                         paddingBottom: "0.5rem",
                         width: "100%",
@@ -355,14 +390,22 @@ export default function NewTransactionPage() {
                     />
                   </div>
                   {stepErrors.amount && (
-                    <p className="text-red-600 text-sm text-center">{stepErrors.amount}</p>
+                    <p className="text-red-600 text-sm text-center">
+                      {stepErrors.amount}
+                    </p>
                   )}
                 </div>
               )}
 
               {/* Step: Category (only for expenses) */}
               {currentStep === "category" && formData.type === "expense" && (
-                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                <div
+                  className={
+                    slideDirection === "right"
+                      ? "slide-in-right"
+                      : "slide-in-left"
+                  }
+                >
                   <h2 className="text-xl font-bold text-foreground mb-6">
                     Category
                   </h2>
@@ -380,7 +423,9 @@ export default function NewTransactionPage() {
                     >
                       <p className="text-foreground mb-4">No categories yet</p>
                       <Button
-                        onClick={() => router.push("/transactions/categories/new")}
+                        onClick={() =>
+                          router.push("/transactions/categories/new")
+                        }
                         size="sm"
                         variant="outline"
                       >
@@ -404,10 +449,14 @@ export default function NewTransactionPage() {
                             }
                             className="p-4 rounded-lg flex items-center gap-3 transition-all text-left"
                             style={{
-                              backgroundColor: isSelected ? "var(--primary)" : "var(--secondary)",
+                              backgroundColor: isSelected
+                                ? "var(--primary)"
+                                : "var(--secondary)",
                               color: isSelected ? "white" : "var(--foreground)",
                               border: "2px solid transparent",
-                              borderColor: isSelected ? "var(--primary)" : "var(--card-border)",
+                              borderColor: isSelected
+                                ? "var(--primary)"
+                                : "var(--card-border)",
                             }}
                           >
                             <IconComponent size={20} />
@@ -418,14 +467,22 @@ export default function NewTransactionPage() {
                     </div>
                   )}
                   {stepErrors.category && (
-                    <p className="text-red-600 text-sm mt-4">{stepErrors.category}</p>
+                    <p className="text-red-600 text-sm mt-4">
+                      {stepErrors.category}
+                    </p>
                   )}
                 </div>
               )}
 
               {/* Step: Date */}
               {currentStep === "date" && (
-                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                <div
+                  className={
+                    slideDirection === "right"
+                      ? "slide-in-right"
+                      : "slide-in-left"
+                  }
+                >
                   <h2 className="text-xl font-bold text-foreground mb-6">
                     When did this happen?
                   </h2>
@@ -438,7 +495,13 @@ export default function NewTransactionPage() {
 
               {/* Step: Description */}
               {currentStep === "description" && (
-                <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
+                <div
+                  className={
+                    slideDirection === "right"
+                      ? "slide-in-right"
+                      : "slide-in-left"
+                  }
+                >
                   <h2 className="text-xl font-bold text-foreground mb-6">
                     Add a note (optional)
                   </h2>
@@ -446,7 +509,9 @@ export default function NewTransactionPage() {
                     type="text"
                     placeholder="What was this for?"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                     autoFocus
                     className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2"
@@ -456,64 +521,72 @@ export default function NewTransactionPage() {
                       color: "var(--foreground)",
                       borderWidth: "1px",
                     }}
-                    onFocus={(e) => (e.currentTarget.style.borderColor = "var(--primary)")}
-                    onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border)")}
+                    onFocus={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--primary)")
+                    }
+                    onBlur={(e) =>
+                      (e.currentTarget.style.borderColor = "var(--border)")
+                    }
                   />
                 </div>
               )}
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={goToPreviousStep}
-                disabled={currentStepIndex === 0}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: currentStepIndex === 0 ? "var(--secondary)" : "var(--primary)",
-                  color: currentStepIndex === 0 ? "var(--text-secondary)" : "white",
-                }}
-              >
-                <ChevronLeft size={18} />
-                Back
-              </button>
+            {currentStep !== "type" && (
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={goToPreviousStep}
+                  disabled={currentStepIndex === 0}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor:
+                      currentStepIndex === 0
+                        ? "var(--secondary)"
+                        : "var(--primary)",
+                    color:
+                      currentStepIndex === 0
+                        ? "var(--text-secondary)"
+                        : "white",
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                  Back
+                </button>
 
-              {currentStepIndex < STEPS.length - 1 ? (
-                <button
-                  onClick={goToNextStep}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all text-white"
-                  style={{
-                    backgroundColor: "var(--primary)",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.opacity = "0.9")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.opacity = "1")
-                  }
-                >
-                  Next
-                  <ChevronRight size={18} />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="flex-1 px-4 py-3 rounded-lg transition-all text-white disabled:opacity-50"
-                  style={{
-                    backgroundColor: "#16a34a",
-                  }}
-                  onMouseEnter={(e) =>
-                    !isSubmitting && (e.currentTarget.style.opacity = "0.9")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.opacity = "1")
-                  }
-                >
-                  {isSubmitting ? "Creating..." : "Create Transaction"}
-                </button>
-              )}
-            </div>
+                {currentStepIndex < STEPS.length - 1 ? (
+                  <button
+                    onClick={goToNextStep}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all text-white"
+                    style={{
+                      backgroundColor: "var(--primary)",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.opacity = "0.9")
+                    }
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  >
+                    Next
+                    <ChevronRight size={18} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-3 rounded-lg transition-all text-white disabled:opacity-50"
+                    style={{
+                      backgroundColor: "#16a34a",
+                    }}
+                    onMouseEnter={(e) =>
+                      !isSubmitting && (e.currentTarget.style.opacity = "0.9")
+                    }
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  >
+                    {isSubmitting ? "Creating..." : "Create Transaction"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Preview Sidebar */}
@@ -536,12 +609,16 @@ export default function NewTransactionPage() {
                   {formData.type === "income" ? (
                     <>
                       <TrendingUp size={18} className="text-green-600" />
-                      <span className="text-sm font-medium text-foreground">Income</span>
+                      <span className="text-sm font-medium text-foreground">
+                        Income
+                      </span>
                     </>
                   ) : (
                     <>
                       <TrendingDown size={18} className="text-red-600" />
-                      <span className="text-sm font-medium text-foreground">Expense</span>
+                      <span className="text-sm font-medium text-foreground">
+                        Expense
+                      </span>
                     </>
                   )}
                 </div>
@@ -594,7 +671,10 @@ export default function NewTransactionPage() {
             </div>
 
             {/* Progress Dots */}
-            <div className="flex gap-1 mt-6 pt-4 border-t" style={{ borderColor: "var(--card-border)" }}>
+            <div
+              className="flex gap-1 mt-6 pt-4 border-t"
+              style={{ borderColor: "var(--card-border)" }}
+            >
               {STEPS.map((_, index) => (
                 <div
                   key={index}
