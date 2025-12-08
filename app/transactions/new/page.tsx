@@ -7,7 +7,7 @@ import { useApi } from "@/hooks/useApi";
 import { useCurrency } from "@/context/CurrencyContext";
 import { Button } from "@/components/Button";
 import { DatePicker } from "@/components/DatePicker";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { format } from "date-fns";
 
@@ -289,34 +289,34 @@ export default function NewTransactionPage() {
               {/* Step: Type */}
               {currentStep === "type" && (
                 <div className={slideDirection === "right" ? "slide-in-right" : "slide-in-left"}>
-                  <h2 className="text-xl font-bold text-foreground mb-6">
+                  <h2 className="text-xl font-bold text-foreground mb-8">
                     What type of transaction?
                   </h2>
-                  <div className="flex gap-3">
+                  <div className="flex gap-4">
                     <button
                       onClick={() => setFormData({ ...formData, type: "expense" })}
-                      className="flex-1 py-12 rounded-lg font-semibold transition-all"
+                      className="flex-1 py-16 rounded-lg font-semibold transition-all flex flex-col items-center justify-center gap-3"
                       style={{
                         backgroundColor: formData.type === "expense" ? "#dc2626" : "var(--secondary)",
                         color: formData.type === "expense" ? "white" : "var(--foreground)",
-                        border: "2px solid transparent",
-                        borderColor: formData.type === "expense" ? "#991b1b" : "var(--card-border)",
+                        border: "2px solid",
+                        borderColor: formData.type === "expense" ? "#dc2626" : "var(--card-border)",
                       }}
                     >
-                      <div className="text-4xl mb-2">💸</div>
+                      <TrendingDown size={32} strokeWidth={1.5} />
                       <div>Expense</div>
                     </button>
                     <button
                       onClick={() => setFormData({ ...formData, type: "income" })}
-                      className="flex-1 py-12 rounded-lg font-semibold transition-all"
+                      className="flex-1 py-16 rounded-lg font-semibold transition-all flex flex-col items-center justify-center gap-3"
                       style={{
                         backgroundColor: formData.type === "income" ? "#16a34a" : "var(--secondary)",
                         color: formData.type === "income" ? "white" : "var(--foreground)",
-                        border: "2px solid transparent",
-                        borderColor: formData.type === "income" ? "#15803d" : "var(--card-border)",
+                        border: "2px solid",
+                        borderColor: formData.type === "income" ? "#16a34a" : "var(--card-border)",
                       }}
                     >
-                      <div className="text-4xl mb-2">💰</div>
+                      <TrendingUp size={32} strokeWidth={1.5} />
                       <div>Income</div>
                     </button>
                   </div>
@@ -531,10 +531,20 @@ export default function NewTransactionPage() {
             <div className="space-y-4">
               {/* Type Preview */}
               <div>
-                <p className="text-xs text-text-secondary mb-1">Type</p>
-                <p className="text-sm font-medium text-foreground">
-                  {formData.type === "income" ? "💰 Income" : "💸 Expense"}
-                </p>
+                <p className="text-xs text-text-secondary mb-2">Type</p>
+                <div className="flex items-center gap-2">
+                  {formData.type === "income" ? (
+                    <>
+                      <TrendingUp size={18} className="text-green-600" />
+                      <span className="text-sm font-medium text-foreground">Income</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrendingDown size={18} className="text-red-600" />
+                      <span className="text-sm font-medium text-foreground">Expense</span>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Amount Preview */}
