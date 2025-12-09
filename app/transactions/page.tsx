@@ -313,7 +313,7 @@ export default function TransactionsPage() {
                       className="text-3xl font-bold"
                       style={{ color: "var(--foreground)" }}
                     >
-                      {currency} {totalExpense.toFixed(2)}
+                      {currency} {totalExpense}
                     </p>
                   </>
                 )}
