@@ -97,6 +97,14 @@ export async function POST(request: NextRequest) {
       data: transactionData,
     });
 
+    // Increment category transaction count if category exists
+    if (categoryId) {
+      await prisma.category.update({
+        where: { id: categoryId },
+        data: { transactionCount: { increment: 1 } },
+      });
+    }
+
     // Fetch with category if it exists
     const transactionWithCategory = await prisma.transaction.findUnique({
       where: { id: transaction.id },

@@ -36,6 +36,14 @@ export async function DELETE(
       );
     }
 
+    // Decrement category transaction count if category exists
+    if (transaction.categoryId) {
+      await prisma.category.update({
+        where: { id: transaction.categoryId },
+        data: { transactionCount: { decrement: 1 } },
+      });
+    }
+
     await prisma.transaction.delete({
       where: { id },
     });

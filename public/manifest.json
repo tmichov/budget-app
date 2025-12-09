@@ -54,7 +54,7 @@
       "name": "Add Expense",
       "short_name": "Add Expense",
       "description": "Quickly add a new expense",
-      "url": "/quick?type=expense&minimal=true",
+      "url": "/transactions/new?type=expense",
       "icons": [
         {
           "src": "/icon-shortcut-expense-192.png",
@@ -67,7 +67,7 @@
       "name": "Add Income",
       "short_name": "Add Income",
       "description": "Quickly add income",
-      "url": "/quick?type=income&minimal=true",
+      "url": "/transactions/new?type=income",
       "icons": [
         {
           "src": "/icon-shortcut-income-192.png",

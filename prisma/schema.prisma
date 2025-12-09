@@ -29,15 +29,16 @@ model User {
 }
 
 model Category {
-  id            String         @id @default(cuid())
-  userId        String
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name          String
-  icon          String         // Lucide React icon name
-  transactions  Transaction[]
-  budgets       CategoryBudget[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                 String         @id @default(cuid())
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  icon               String         // Lucide React icon name
+  transactionCount   Int            @default(0) // Counter for quick sorting
+  transactions       Transaction[]
+  budgets            CategoryBudget[]
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 
   @@unique([userId, name])
 }
