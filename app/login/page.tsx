@@ -133,22 +133,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-
-          <div className="mt-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
-            <p className="text-blue-900 dark:text-blue-200 text-xs font-semibold mb-3">
-              Demo Credentials
-            </p>
-            <div className="space-y-2">
-              <div>
-                <p className="text-blue-800 dark:text-blue-300 text-xs">Email</p>
-                <code className="text-blue-700 dark:text-blue-400 text-xs font-mono">demo@example.com</code>
-              </div>
-              <div>
-                <p className="text-blue-800 dark:text-blue-300 text-xs">Password</p>
-                <code className="text-blue-700 dark:text-blue-400 text-xs font-mono">demo123</code>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Footer Info */}
