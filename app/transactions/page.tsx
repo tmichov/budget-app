@@ -140,6 +140,13 @@ export default function TransactionsPage() {
 
   const totalExpense = categorySpending.reduce((sum, c) => sum + c.value, 0);
 
+  // Calculate total income and balance
+  const totalIncome = transactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const balance = totalIncome - totalExpense;
+
   // Filter transactions
   const filteredTransactions = filterByCategory
     ? transactions.filter((t) => t.categoryId === filterByCategory)
@@ -212,6 +219,35 @@ export default function TransactionsPage() {
           >
             Manage Categories
           </Button>
+        </div>
+
+        {/* Balance Summary Section */}
+        <div
+          className="rounded-lg p-6 mb-6 text-center"
+          style={{
+            backgroundColor: "var(--card)",
+            borderWidth: "1px",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <p
+            className="text-sm text-text-secondary mb-2"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Current Balance
+          </p>
+          <p
+            className="text-4xl font-bold"
+            style={{ color: balance >= 0 ? "#16a34a" : "#dc2626" }}
+          >
+            <CurrencyDisplay
+              amount={Math.abs(balance)}
+              currency={currency}
+            />
+          </p>
+          {balance < 0 && (
+            <p className="text-sm text-red-600 mt-2">Deficit</p>
+          )}
         </div>
 
         {/* Category Spending Chart Section */}
@@ -492,22 +528,36 @@ export default function TransactionsPage() {
                           )}
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {transaction.type === "income"
-                              ? "Income"
-                              : transaction.category
-                                ? transaction.category.name
-                                : transaction.description}
-                          </p>
-                          {transaction.description && (
-                            <p className="text-xs text-text-secondary">
-                              {transaction.description.startsWith(
-                                "Bill payment:",
-                              )
-                                ? ""
-                                : transaction.description}
+                          {transaction.type === "income" ? (
+                            <p className="text-sm font-medium text-foreground">
+                              Income
+                              {transaction.type === "income"
+                                ? "Income"
+                                : transaction.description ||
+                                  transaction.category?.name}
                             </p>
-                          )}
+                          ) : null}
+
+                          {transaction.type === "expense" ? (
+                            <>
+                              {transaction.description ? (
+                                <>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {transaction.description}
+                                  </p>
+                                  <p className="text-xs text-text-secondary">
+                                    {transaction.category?.name}
+                                  </p>
+                                </>
+                              ) : null}
+
+                              {!transaction.description ? (
+                                <p className="text-sm font-medium text-foreground">
+                                  {transaction.category?.name}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : null}
                           <p className="text-xs text-text-secondary">
                             {format(new Date(transaction.date), "dd/MMM/yyyy")}
                           </p>
