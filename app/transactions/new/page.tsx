@@ -29,6 +29,10 @@ function NewTransactionContent() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [location, setLocation] = useState({
+    latitude: null as number | null,
+    longitude: null as number | null,
+  });
 
   const typeFromUrl = (searchParams.get("type") as "income" | "expense") || "expense";
 
@@ -47,6 +51,7 @@ function NewTransactionContent() {
       return;
     }
     fetchCategories();
+    requestLocationPermission();
   }, [status, router]);
 
   const fetchCategories = async () => {
@@ -76,6 +81,34 @@ function NewTransactionContent() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const requestLocationPermission = () => {
+    try {
+      if (!navigator.geolocation) {
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({
+            latitude: parseFloat(latitude.toFixed(6)),
+            longitude: parseFloat(longitude.toFixed(6)),
+          });
+        },
+        () => {
+          // Silently fail - user can deny permission, we just won't have location data
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    } catch (err) {
+      // Silently fail
     }
   };
 
@@ -110,6 +143,8 @@ function NewTransactionContent() {
             formData.type === "income" ? null : formData.categoryId,
           description: formData.description || undefined,
           date: formData.date,
+          latitude: location.latitude || undefined,
+          longitude: location.longitude || undefined,
         }),
       });
       router.push("/transactions");
@@ -220,8 +255,11 @@ function NewTransactionContent() {
               <label className="block text-sm font-semibold text-foreground mb-2">
                 Amount
               </label>
-              <div className="flex items-center gap-3">
-                <span className="text-lg font-semibold text-text-secondary min-w-fit">
+              <div className="relative w-full">
+                <span
+                  className="absolute left-0 top-0 h-full flex items-center px-4 text-lg font-semibold pointer-events-none"
+                  style={{ color: "var(--text-secondary)" }}
+                >
                   {currency === "MKD"
                     ? "МКД"
                     : currency === "USD"
@@ -237,12 +275,14 @@ function NewTransactionContent() {
                   onChange={(e) =>
                     setFormData({ ...formData, amount: e.target.value })
                   }
-                  className="flex-1 px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2"
+                  className="w-full py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2"
                   style={{
                     backgroundColor: "var(--background)",
                     borderColor: "var(--border)",
                     color: "var(--foreground)",
                     borderWidth: "1px",
+                    paddingLeft: currency === "MKD" ? "4.5rem" : "3.2rem",
+                    paddingRight: "1rem",
                   }}
                   onFocus={(e) =>
                     (e.currentTarget.style.borderColor = "var(--primary)")

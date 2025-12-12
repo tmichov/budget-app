@@ -7,7 +7,7 @@ import { useApi } from "@/hooks/useApi";
 import { useCurrency } from "@/context/CurrencyContext";
 import { formatCurrency } from "@/lib/currency";
 import { Button } from "@/components/Button";
-import { ArrowLeft, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Edit2, Check, X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import {
   LineChart,
@@ -52,6 +52,9 @@ export default function BillDetailsPage() {
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
   const [deleteBillConfirm, setDeleteBillConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -119,6 +122,55 @@ export default function BillDetailsPage() {
     }
   };
 
+  const handleEditName = () => {
+    if (bill) {
+      setEditedName(bill.name);
+      setIsEditingName(true);
+    }
+  };
+
+  const handleSaveName = async () => {
+    if (!bill || !editedName.trim()) {
+      setError("Bill name cannot be empty");
+      return;
+    }
+
+    const trimmedName = editedName.trim();
+    if (trimmedName === bill.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    try {
+      setIsSavingName(true);
+      console.log('Sending PATCH request with name:', trimmedName);
+
+      const response = await request(`/api/bills/${billId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmedName }),
+      });
+
+      console.log('PATCH response:', response);
+
+      // Update bill locally
+      setBill({ ...bill, name: trimmedName });
+      setIsEditingName(false);
+      setError("");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to update bill name";
+      console.error('Error updating bill:', errorMessage, err);
+      setError(errorMessage);
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setEditedName("");
+  };
+
   const prepareChartData = (): ChartData[] => {
     if (!bill || bill.payments.length === 0) return [];
 
@@ -164,7 +216,7 @@ export default function BillDetailsPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
             <button
               onClick={() => router.back()}
               className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
@@ -172,15 +224,70 @@ export default function BillDetailsPage() {
             >
               <ArrowLeft size={24} />
             </button>
-            <h1 className="text-2xl font-bold text-foreground">{bill.name}</h1>
+            {isEditingName ? (
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className="min-w-0 w-full text-2xl font-bold px-2 py-1 rounded border"
+                style={{
+                  backgroundColor: "var(--background)",
+                  borderColor: "var(--border)",
+                  color: "var(--foreground)",
+                  borderWidth: "1px",
+                }}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSaveName();
+                  } else if (e.key === "Escape") {
+                    handleCancelEdit();
+                  }
+                }}
+              />
+            ) : (
+              <h1 className="text-2xl font-bold text-foreground truncate">{bill.name}</h1>
+            )}
           </div>
-          <button
-            onClick={() => setDeleteBillConfirm(true)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete bill"
-          >
-            <Trash2 size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            {isEditingName ? (
+              <>
+                <button
+                  onClick={handleSaveName}
+                  disabled={isSavingName}
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50"
+                  title="Save"
+                >
+                  <Check size={24} />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={isSavingName}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                  title="Cancel"
+                >
+                  <X size={24} />
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleEditName}
+                  className="p-2 text-foreground hover:bg-secondary rounded-lg transition-colors"
+                  title="Edit bill"
+                >
+                  <Edit2 size={24} />
+                </button>
+                <button
+                  onClick={() => setDeleteBillConfirm(true)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete bill"
+                >
+                  <Trash2 size={24} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {error && (

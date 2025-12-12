@@ -44,7 +44,12 @@ export function FloatingNav() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none">
+    <div
+      className="fixed bottom-8 left-0 right-0 flex justify-center pointer-events-none"
+      style={{
+        bottom: "max(2rem, env(safe-area-inset-bottom) + 0.5rem)",
+      }}
+    >
       <div className="flex gap-2 bg-card rounded-full shadow-lg border border-card-border p-2 pointer-events-auto backdrop-blur-xs">
         {navItems.map((item) => {
           const active = isActive(item.href);

@@ -104,6 +104,19 @@ export default function BillsPage() {
   if (!session?.user) return null;
   if (loading) return <div className="p-4 text-center">Loading...</div>;
 
+  // Calculate current month total
+  const now = new Date();
+  const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const currentMonthTotal = bills.reduce((total, bill) => {
+    const currentMonthPayment = bill.payments.find((p) => {
+      const paymentDate = new Date(p.date);
+      return paymentDate >= currentMonth && paymentDate < nextMonth;
+    });
+    return total + (currentMonthPayment?.amount || 0);
+  }, 0);
+
   return (
     <div className="min-h-screen bg-background px-4 py-6 md:px-6 pb-32">
       <div className="max-w-4xl mx-auto">
@@ -112,6 +125,32 @@ export default function BillsPage() {
             {error}
           </div>
         )}
+
+        {/* Current Month Total */}
+        <div
+          className="rounded-lg p-6 mb-6 text-center"
+          style={{
+            backgroundColor: "var(--card)",
+            borderWidth: "1px",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <p
+            className="text-sm text-text-secondary mb-2"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            This Month's Bills
+          </p>
+          <p
+            className="text-3xl font-bold"
+            style={{ color: "var(--foreground)" }}
+          >
+            <CurrencyDisplay
+              amount={currentMonthTotal}
+              currency={currency}
+            />
+          </p>
+        </div>
 
         {/* Add Bill Button */}
         <Button
@@ -127,7 +166,7 @@ export default function BillsPage() {
           <p className="text-text-secondary text-center py-8">No bills yet</p>
         ) : (
           <div className="space-y-4">
-            {bills.map((bill) => {
+            {[...bills].sort((a, b) => a.name.localeCompare(b.name)).map((bill) => {
               const IconComponent = getIconComponent(bill.icon);
 
               // Get current month's payment
@@ -156,15 +195,6 @@ export default function BillsPage() {
                   onClick={() => router.push(`/bills/${bill.id}`)}
                   className="w-full text-left bg-card border border-card-border rounded-lg p-4 hover:border-primary/50 transition-colors"
                 >
-                  {/* Alert for missing payment */}
-                  {!isPaid && (
-                    <div className="p-2 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 mb-3 flex items-center gap-2">
-                      <span className="text-yellow-600 dark:text-yellow-400 text-sm font-medium">
-                        ⚠ Not paid this month
-                      </span>
-                    </div>
-                  )}
-
                   {/* Bill Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -212,11 +242,20 @@ export default function BillsPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="rounded-lg p-6 max-w-sm w-full" style={{ backgroundColor: 'var(--card)' }}>
-            <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+          <div
+            className="rounded-lg p-6 max-w-sm w-full"
+            style={{ backgroundColor: "var(--card)" }}
+          >
+            <h2
+              className="text-lg font-bold mb-2"
+              style={{ color: "var(--foreground)" }}
+            >
               Delete Bill?
             </h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+            <p
+              className="text-sm mb-6"
+              style={{ color: "var(--text-secondary)" }}
+            >
               This will delete the bill and all its payment history.
             </p>
             <div className="flex gap-3">
@@ -224,13 +263,17 @@ export default function BillsPage() {
                 onClick={() => setDeleteConfirmId(null)}
                 className="flex-1 px-4 py-2 rounded-lg transition-colors font-medium text-sm"
                 style={{
-                  borderWidth: '1px',
-                  borderColor: 'var(--border)',
-                  backgroundColor: 'var(--background)',
-                  color: 'var(--foreground)',
+                  borderWidth: "1px",
+                  borderColor: "var(--border)",
+                  backgroundColor: "var(--background)",
+                  color: "var(--foreground)",
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--secondary)'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--background)'}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "var(--secondary)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "var(--background)")
+                }
               >
                 Cancel
               </button>
@@ -239,10 +282,15 @@ export default function BillsPage() {
                 disabled={deleting}
                 className="flex-1 px-4 py-2 rounded-lg text-white transition-colors font-medium text-sm disabled:opacity-50"
                 style={{
-                  backgroundColor: '#dc2626',
+                  backgroundColor: "#dc2626",
                 }}
-                onMouseEnter={(e) => !deleting && (e.currentTarget.style.backgroundColor = '#b91c1c')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#dc2626')}
+                onMouseEnter={(e) =>
+                  !deleting &&
+                  (e.currentTarget.style.backgroundColor = "#b91c1c")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#dc2626")
+                }
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

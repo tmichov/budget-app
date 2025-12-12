@@ -138,7 +138,29 @@ export default function TransactionsPage() {
     })
     .filter((c) => c.value > 0);
 
-  const totalExpense = categorySpending.reduce((sum, c) => sum + c.value, 0);
+  // Add bill payments as a category in the pie chart
+  const billPaymentsSpent = transactions
+    .filter(
+      (t) =>
+        t.type === "expense" &&
+        !t.categoryId &&
+        t.description?.startsWith("Bill payment:")
+    )
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const allCategorySpending = billPaymentsSpent > 0
+    ? [
+        ...categorySpending,
+        {
+          name: "Bills",
+          value: parseFloat(billPaymentsSpent.toFixed(2)),
+          categoryId: "bills",
+          icon: "Receipt",
+        },
+      ]
+    : categorySpending;
+
+  const totalExpense = allCategorySpending.reduce((sum, c) => sum + c.value, 0);
 
   // Calculate total income and balance
   const totalIncome = transactions
@@ -149,7 +171,14 @@ export default function TransactionsPage() {
 
   // Filter transactions
   const filteredTransactions = filterByCategory
-    ? transactions.filter((t) => t.categoryId === filterByCategory)
+    ? filterByCategory === "bills"
+      ? transactions.filter(
+          (t) =>
+            t.type === "expense" &&
+            !t.categoryId &&
+            t.description?.startsWith("Bill payment:")
+        )
+      : transactions.filter((t) => t.categoryId === filterByCategory)
     : transactions;
 
   // Sort transactions: newest first by date, then by createdAt
@@ -163,7 +192,7 @@ export default function TransactionsPage() {
   });
 
   const selectedCategoryData = selectedCategory
-    ? categorySpending.find((c) => c.categoryId === selectedCategory)
+    ? allCategorySpending.find((c) => c.categoryId === selectedCategory)
     : null;
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -183,7 +212,15 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 md:px-6 pb-32">
+    <div
+      className="min-h-screen bg-background px-4 py-6 md:px-6 pb-32"
+      style={{
+        paddingLeft: "max(1rem, env(safe-area-inset-left))",
+        paddingRight: "max(1rem, env(safe-area-inset-right))",
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(8rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <div className="max-w-4xl mx-auto">
         {error && (
           <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm mb-6">
@@ -221,176 +258,172 @@ export default function TransactionsPage() {
           </Button>
         </div>
 
-        {/* Balance Summary Section */}
+        {/* Balance & Spending Chart Section */}
         <div
-          className="rounded-lg p-6 mb-6 text-center"
+          className="rounded-lg p-6 mb-6"
           style={{
             backgroundColor: "var(--card)",
             borderWidth: "1px",
             borderColor: "var(--card-border)",
           }}
         >
-          <p
-            className="text-sm text-text-secondary mb-2"
-            style={{ color: "var(--text-secondary)" }}
+          {/* Balance Display */}
+          <div
+            className="text-center mb-4 pb-4 border-b"
+            style={{ borderColor: "var(--card-border)" }}
           >
-            Current Balance
-          </p>
-          <p
-            className="text-4xl font-bold"
-            style={{ color: balance >= 0 ? "#16a34a" : "#dc2626" }}
-          >
-            <CurrencyDisplay
-              amount={Math.abs(balance)}
-              currency={currency}
-            />
-          </p>
-          {balance < 0 && (
-            <p className="text-sm text-red-600 mt-2">Deficit</p>
+            <p
+              className="text-xs text-text-secondary mb-1"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Current Balance
+            </p>
+            <p
+              className="text-3xl font-bold"
+              style={{ color: balance >= 0 ? "#16a34a" : "#dc2626" }}
+            >
+              <CurrencyDisplay amount={Math.abs(balance)} currency={currency} />
+            </p>
+            {balance < 0 && (
+              <p className="text-xs text-red-600 mt-1">Deficit</p>
+            )}
+          </div>
+
+          {/* Category Spending Chart */}
+          {allCategorySpending.length > 0 && (
+            <>
+              <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+                {/* Chart */}
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={allCategorySpending}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={2}
+                      dataKey="value"
+                      onMouseEnter={(_, index) => {
+                        const category = categorySpending[index];
+                        if (category) setSelectedCategory(category.categoryId);
+                      }}
+                      onMouseLeave={() => setSelectedCategory(null)}
+                      onClick={(data) => {
+                        setSelectedCategory(
+                          selectedCategory === data.categoryId
+                            ? null
+                            : data.categoryId,
+                        );
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {allCategorySpending.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          opacity={
+                            !selectedCategory ||
+                            selectedCategory === entry.categoryId
+                              ? 1
+                              : 0.3
+                          }
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number) =>
+                        `${currency} ${value.toFixed(2)}`
+                      }
+                      contentStyle={{
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "6px",
+                        color: "var(--foreground)",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                {/* Center Display */}
+                <div className="text-center md:absolute">
+                  {selectedCategoryData ? (
+                    <>
+                      <p
+                        className="text-sm text-text-secondary mb-2"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        {selectedCategoryData.name}
+                      </p>
+                      <p
+                        className="text-3xl font-bold mb-1"
+                        style={{ color: "var(--foreground)" }}
+                      >
+                        {currency} {selectedCategoryData.value.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        {(
+                          (selectedCategoryData.value / totalExpense) *
+                          100
+                        ).toFixed(1)}
+                        % of total
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p
+                        className="text-sm text-text-secondary mb-2"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        Total Spent
+                      </p>
+                      <p
+                        className="text-3xl font-bold"
+                        style={{ color: "var(--foreground)" }}
+                      >
+                        {currency} {totalExpense}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Category Pills */}
+              <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                {allCategorySpending.map((category, index) => (
+                  <button
+                    key={category.categoryId}
+                    onClick={() =>
+                      setSelectedCategory(
+                        selectedCategory === category.categoryId
+                          ? null
+                          : category.categoryId,
+                      )
+                    }
+                    className="px-3 py-1 rounded-full text-xs font-medium transition-all"
+                    style={{
+                      backgroundColor:
+                        selectedCategory === category.categoryId
+                          ? COLORS[index % COLORS.length]
+                          : "var(--secondary)",
+                      color:
+                        selectedCategory === category.categoryId
+                          ? "white"
+                          : "var(--foreground)",
+                      opacity:
+                        !selectedCategory ||
+                        selectedCategory === category.categoryId
+                          ? 1
+                          : 0.5,
+                    }}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
-
-        {/* Category Spending Chart Section */}
-        {categorySpending.length > 0 && (
-          <div
-            className="rounded-lg p-6 mb-6"
-            style={{
-              backgroundColor: "var(--card)",
-              borderWidth: "1px",
-              borderColor: "var(--card-border)",
-            }}
-          >
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-              {/* Chart */}
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={categorySpending}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={2}
-                    dataKey="value"
-                    onMouseEnter={(_, index) => {
-                      const category = categorySpending[index];
-                      if (category) setSelectedCategory(category.categoryId);
-                    }}
-                    onMouseLeave={() => setSelectedCategory(null)}
-                    onClick={(data) => {
-                      setSelectedCategory(
-                        selectedCategory === data.categoryId
-                          ? null
-                          : data.categoryId,
-                      );
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {categorySpending.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                        opacity={
-                          !selectedCategory ||
-                          selectedCategory === entry.categoryId
-                            ? 1
-                            : 0.3
-                        }
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number) =>
-                      `${currency} ${value.toFixed(2)}`
-                    }
-                    contentStyle={{
-                      backgroundColor: "var(--background)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "6px",
-                      color: "var(--foreground)",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              {/* Center Display */}
-              <div className="text-center md:absolute">
-                {selectedCategoryData ? (
-                  <>
-                    <p
-                      className="text-sm text-text-secondary mb-2"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {selectedCategoryData.name}
-                    </p>
-                    <p
-                      className="text-3xl font-bold mb-1"
-                      style={{ color: "var(--foreground)" }}
-                    >
-                      {currency} {selectedCategoryData.value.toFixed(2)}
-                    </p>
-                    <p className="text-xs text-text-secondary">
-                      {(
-                        (selectedCategoryData.value / totalExpense) *
-                        100
-                      ).toFixed(1)}
-                      % of total
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p
-                      className="text-sm text-text-secondary mb-2"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      Total Spent
-                    </p>
-                    <p
-                      className="text-3xl font-bold"
-                      style={{ color: "var(--foreground)" }}
-                    >
-                      {currency} {totalExpense}
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Category Pills */}
-            <div className="mt-4 flex flex-wrap gap-2 justify-center">
-              {categorySpending.map((category, index) => (
-                <button
-                  key={category.categoryId}
-                  onClick={() =>
-                    setSelectedCategory(
-                      selectedCategory === category.categoryId
-                        ? null
-                        : category.categoryId,
-                    )
-                  }
-                  className="px-3 py-1 rounded-full text-xs font-medium transition-all"
-                  style={{
-                    backgroundColor:
-                      selectedCategory === category.categoryId
-                        ? COLORS[index % COLORS.length]
-                        : "var(--secondary)",
-                    color:
-                      selectedCategory === category.categoryId
-                        ? "white"
-                        : "var(--foreground)",
-                    opacity:
-                      !selectedCategory ||
-                      selectedCategory === category.categoryId
-                        ? 1
-                        : 0.5,
-                  }}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Transactions List Header */}
         <div className="flex items-center justify-between mb-4">
@@ -467,6 +500,29 @@ export default function TransactionsPage() {
                   {category.name}
                 </button>
               ))}
+              {billPaymentsSpent > 0 && (
+                <button
+                  onClick={() => {
+                    setFilterByCategory("bills");
+                    setShowFilters(false);
+                  }}
+                  className="px-3 py-1 rounded-full text-sm transition-all flex items-center gap-1"
+                  style={{
+                    backgroundColor:
+                      filterByCategory === "bills"
+                        ? "var(--primary)"
+                        : "var(--card)",
+                    color:
+                      filterByCategory === "bills"
+                        ? "white"
+                        : "var(--foreground)",
+                    borderWidth: "1px",
+                    borderColor: "var(--card-border)",
+                  }}
+                >
+                  Bills
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -530,11 +586,9 @@ export default function TransactionsPage() {
                         <div className="flex-1">
                           {transaction.type === "income" ? (
                             <p className="text-sm font-medium text-foreground">
-                              Income
-                              {transaction.type === "income"
-                                ? "Income"
-                                : transaction.description ||
-                                  transaction.category?.name}
+                              {transaction.description
+                                ? transaction.description
+                                : "Income"}
                             </p>
                           ) : null}
 

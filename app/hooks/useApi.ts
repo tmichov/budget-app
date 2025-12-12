@@ -28,7 +28,18 @@ export function useApi() {
         throw new Error(error.message || 'Request failed');
       }
 
-      return response.json();
+      // Handle empty responses (e.g., from DELETE or PATCH requests)
+      const contentLength = response.headers.get('content-length');
+      if (contentLength === '0' || response.status === 204) {
+        return null;
+      }
+
+      const text = await response.text();
+      if (!text) {
+        return null;
+      }
+
+      return JSON.parse(text);
     },
     [session?.user?.id]
   );
